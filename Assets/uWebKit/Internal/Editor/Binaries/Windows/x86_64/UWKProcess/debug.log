@@ -13,3 +13,7 @@
 [0510/013703:ERROR:browser_context_impl.cc(163)] The cache_path directory could not be created: C:/Users/ï¿¦ï¾¢ï¾ï¿¦ï¾™ï¾ºï¿¦ï¾¹ï¾§/AppData/Roaming/uWebKit/WebCache/
 [0510/200838:ERROR:browser_context_impl.cc(163)] The cache_path directory could not be created: C:/Users/ï¿¦ï¾¢ï¾ï¿¦ï¾™ï¾ºï¿¦ï¾¹ï¾§/AppData/Roaming/uWebKit/WebCache/
 [0510/200915:ERROR:browser_context_impl.cc(163)] The cache_path directory could not be created: C:/Users/ï¿¦ï¾¢ï¾ï¿¦ï¾™ï¾ºï¿¦ï¾¹ï¾§/AppData/Roaming/uWebKit/WebCache/
+[0512/161041:WARNING:raw_channel_win.cc(532)] WriteFile: ºŞ¹D¥¿Ãö³¬¤¤¡C (0xE8)
+[0512/161041:WARNING:channel.cc(358)] RawChannel write error
+[0512/161041:WARNING:raw_channel_win.cc(532)] WriteFile: ºŞ¹D¥¿Ãö³¬¤¤¡C (0xE8)
+[0512/161041:WARNING:channel.cc(358)] RawChannel write error
