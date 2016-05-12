@@ -28,10 +28,10 @@ public class ViewController : MonoBehaviour {
     }
 
     void rearrange() {
-        float firstAngle = - (viewList.Count-1) / 2f * 30;
+        float firstAngle = - (viewList.Count-1) / 2f * 60;
         foreach(GameObject view in viewList) {
             view.transform.eulerAngles = new Vector3(0, firstAngle, 0);
-            firstAngle += 30;
+            firstAngle += 60;
         }
     }
 }
