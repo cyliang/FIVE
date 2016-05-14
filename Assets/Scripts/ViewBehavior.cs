@@ -3,12 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class ViewBehavior : MonoBehaviour {
-
+    
     public GameObject webPlane;
     public GameObject closeBtn;
     public float shakeSpeed, shakeAmplitude;
 
     public bool isShaking { get; set; }
+    public ViewController viewController { get; set; }
     public LinkedListNode<ViewBehavior> selfNode { get; set; }
 
 	// Use this for initialization
@@ -24,4 +25,8 @@ public class ViewBehavior : MonoBehaviour {
 
         closeBtn.SetActive(isShaking);
 	}
+
+    public void OnCloseBtnPressed() {
+        viewController.removeView(selfNode);
+    }
 }

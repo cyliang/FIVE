@@ -60,11 +60,13 @@ public class ViewController : MonoBehaviour {
     void createView() {
         ViewBehavior newView = Instantiate(viewPrefab).GetComponent<ViewBehavior>();
         newView.transform.parent = viewsObject.transform;
+        newView.viewController = this;
         newView.selfNode = viewList.AddLast(newView);
         rearrange();
     }
 
-    void removeView(LinkedListNode<ViewBehavior> view) {
+    public void removeView(LinkedListNode<ViewBehavior> view) {
+        Destroy(view.Value.gameObject);
         viewList.Remove(view);
         showViewUI();
     }
