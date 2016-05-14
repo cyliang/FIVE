@@ -39,6 +39,8 @@ public class ViewController : MonoBehaviour {
     }
 
     void rearrange() {
+        UIObject.SetActive(false);
+
         showSurroundedViews(viewList.Take(6), viewOrigScale, 360 / 6);
         foreach (ViewBehavior view in viewList.Skip(6)) {
             view.gameObject.SetActive(false);

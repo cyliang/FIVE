@@ -4,6 +4,7 @@ using System.Collections;
 public class ViewBehavior : MonoBehaviour {
 
     public GameObject webPlane;
+    public GameObject closeBtn;
     public float shakeSpeed, shakeAmplitude;
     public bool isShaking { get; set; }
 
@@ -17,5 +18,7 @@ public class ViewBehavior : MonoBehaviour {
         Vector3 eulerAngle = transform.localEulerAngles;
         eulerAngle.z = isShaking ? Mathf.Sin(Time.time * shakeSpeed) * shakeAmplitude : 0;
         transform.localEulerAngles = eulerAngle;
+
+        closeBtn.SetActive(isShaking);
 	}
 }
