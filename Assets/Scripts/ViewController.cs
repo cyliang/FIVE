@@ -11,13 +11,37 @@ public class ViewController : MonoBehaviour {
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> viewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
-    
-	// Use this for initialization
-	void Start () {
+
+    private bool _isInUI;
+    private bool isInUI {
+        get { return _isInUI; }
+        set {
+            _isInUI = value;
+            if (value)
+                showViewUI();
+            else
+                rearrange();
+        }
+    }
+
+    private bool _isEditing;
+    private bool isEditing {
+        get { return _isEditing; }
+        set {
+            foreach (ViewBehavior view in viewList) {
+                view.isShaking = value;
+            }
+            _isEditing = value;
+        }
+    }
+
+    // Use this for initialization
+    void Start () {
         viewsObject = new GameObject("Views");
         viewsObject.transform.parent = transform;
-
+        
         viewOrigScale = viewPrefab.transform.localScale;
+        isInUI = false;
 	}
 	
 	// Update is called once per frame
@@ -25,21 +49,30 @@ public class ViewController : MonoBehaviour {
 	    if (Input.GetKeyDown(KeyCode.F1)) {
             createView();
         } else if (Input.GetKeyDown(KeyCode.F2)) {
-            rearrange();
+            isInUI = !isInUI;
         } else if (Input.GetKeyDown(KeyCode.F3)) {
-            showViewUI();
+            if (isInUI) {
+                isEditing = !isEditing;
+            }
         }
 	}
 
     void createView() {
-        GameObject newView = Instantiate(viewPrefab);
+        ViewBehavior newView = Instantiate(viewPrefab).GetComponent<ViewBehavior>();
         newView.transform.parent = viewsObject.transform;
-        viewList.AddLast(newView.GetComponent<ViewBehavior>());
+        newView.selfNode = viewList.AddLast(newView);
         rearrange();
+    }
+
+    void removeView(LinkedListNode<ViewBehavior> view) {
+        viewList.Remove(view);
+        showViewUI();
     }
 
     void rearrange() {
         UIObject.SetActive(false);
+        isEditing = false;
+        _isInUI = false;
 
         showSurroundedViews(viewList.Take(6), viewOrigScale, 360 / 6);
         foreach (ViewBehavior view in viewList.Skip(6)) {
@@ -49,6 +82,7 @@ public class ViewController : MonoBehaviour {
 
     void showViewUI() {
         UIObject.SetActive(true);
+        _isInUI = true;
 
         Vector3 previewScale = new Vector3(0.28f, 0.28f, 1f);
         showSurroundedViews(viewList.Take(6), previewScale, 120 / 6, -22f);
@@ -64,4 +98,5 @@ public class ViewController : MonoBehaviour {
             firstAngle += deltaAngle;
         }
     }
+
 }
