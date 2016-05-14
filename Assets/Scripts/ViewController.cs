@@ -9,7 +9,7 @@ public class ViewController : MonoBehaviour {
     public GameObject UIObject;
 
     private Vector3 viewOrigScale;
-    private LinkedList<GameObject> viewList = new LinkedList<GameObject>();
+    private LinkedList<ViewBehavior> viewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
     
 	// Use this for initialization
@@ -34,14 +34,14 @@ public class ViewController : MonoBehaviour {
     void createView() {
         GameObject newView = Instantiate(viewPrefab);
         newView.transform.parent = viewsObject.transform;
-        viewList.AddLast(newView);
+        viewList.AddLast(newView.GetComponent<ViewBehavior>());
         rearrange();
     }
 
     void rearrange() {
         showSurroundedViews(viewList.Take(6), viewOrigScale, 360 / 6);
-        foreach (GameObject view in viewList.Skip(6)) {
-            view.SetActive(false);
+        foreach (ViewBehavior view in viewList.Skip(6)) {
+            view.gameObject.SetActive(false);
         }
     }
 
@@ -53,10 +53,10 @@ public class ViewController : MonoBehaviour {
         showSurroundedViews(viewList.Skip(6), previewScale, 120 / 6, 27f);
     }
 
-    void showSurroundedViews(IEnumerable<GameObject> showList, Vector3 scale, float deltaAngle, float elevationAngle = 0f) {
+    void showSurroundedViews(IEnumerable<ViewBehavior> showList, Vector3 scale, float deltaAngle, float elevationAngle = 0f) {
         float firstAngle = -(showList.Count() - 1) / 2f * deltaAngle;
-        foreach (GameObject view in showList) {
-            view.SetActive(true);
+        foreach (ViewBehavior view in showList) {
+            view.gameObject.SetActive(true);
             view.transform.localScale = scale;
             view.transform.eulerAngles = new Vector3(elevationAngle, firstAngle, 0);
             firstAngle += deltaAngle;
