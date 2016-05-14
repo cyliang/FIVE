@@ -9,7 +9,8 @@ public class ViewController : MonoBehaviour {
     public GameObject UIObject;
 
     private Vector3 viewOrigScale;
-    private LinkedList<ViewBehavior> viewList = new LinkedList<ViewBehavior>();
+    private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
+    private LinkedList<ViewBehavior> hiddenViewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
 
     private bool _isInUI;
@@ -28,7 +29,7 @@ public class ViewController : MonoBehaviour {
     private bool isEditing {
         get { return _isEditing; }
         set {
-            foreach (ViewBehavior view in viewList) {
+            foreach (ViewBehavior view in displayedViewList.Concat(hiddenViewList)) {
                 view.isShaking = value;
             }
             _isEditing = value;
@@ -61,13 +62,13 @@ public class ViewController : MonoBehaviour {
         ViewBehavior newView = Instantiate(viewPrefab).GetComponent<ViewBehavior>();
         newView.transform.parent = viewsObject.transform;
         newView.viewController = this;
-        newView.selfNode = viewList.AddLast(newView);
+        newView.selfNode = displayedViewList.Count < 6 ? displayedViewList.AddLast(newView) : hiddenViewList.AddLast(newView);
         rearrange();
     }
 
     public void removeView(LinkedListNode<ViewBehavior> view) {
         Destroy(view.Value.gameObject);
-        viewList.Remove(view);
+        view.List.Remove(view);
         showViewUI();
     }
 
@@ -76,8 +77,8 @@ public class ViewController : MonoBehaviour {
         isEditing = false;
         _isInUI = false;
 
-        showSurroundedViews(viewList.Take(6), viewOrigScale, 360 / 6);
-        foreach (ViewBehavior view in viewList.Skip(6)) {
+        showSurroundedViews(displayedViewList, viewOrigScale, 360 / 6);
+        foreach (ViewBehavior view in hiddenViewList) {
             view.gameObject.SetActive(false);
         }
     }
@@ -87,8 +88,8 @@ public class ViewController : MonoBehaviour {
         _isInUI = true;
 
         Vector3 previewScale = new Vector3(0.28f, 0.28f, 1f);
-        showSurroundedViews(viewList.Take(6), previewScale, 120 / 6, -22f);
-        showSurroundedViews(viewList.Skip(6), previewScale, 120 / 6, 27f);
+        showSurroundedViews(displayedViewList, previewScale, 120 / 6, -22f);
+        showSurroundedViews(hiddenViewList, previewScale, 120 / 6, 27f);
     }
 
     void showSurroundedViews(IEnumerable<ViewBehavior> showList, Vector3 scale, float deltaAngle, float elevationAngle = 0f) {
