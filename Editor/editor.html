@@ -29,10 +29,54 @@
 }</pre>
 
 <script src="http://ajaxorg.github.io/ace-builds/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="http://ajaxorg.github.io/ace-builds/src-noconflict/ext-modelist.js" type="text/javascript" charset="utf-8"></script>
 <script>
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/twilight");
     editor.session.setMode("ace/mode/javascript");
+</script>
+
+<script>
+	/*
+	queryStr shall be a JSON as this:
+	{
+		"cmd": "function to call",
+		"params": {
+			// Parameters for the function call
+		}
+	}
+	*/
+	function makeQuery(queryStr) {
+		const query = JSON.parse(queryStr);
+		return commands[query.cmd](query.params);
+	}
+	
+	const commands = {
+		/*
+		params: {
+			"path": "Relative to projectPath",
+			"content": "The text data of the file"
+		}
+		return nothing
+		*/
+		loadFile: function(params) {
+			var modelist = ace.require("ace/ext/modelist");
+			editor.session.setMode(modelist.getModeForPath(params.path).mode);
+			editor.setValue(params.content);
+		},
+		
+		/*
+		params: {}
+		return {
+			"content": "The text data in the editor"
+		}
+		*/
+		saveFile: function(params) {
+			return {
+				content: editor.getValue()
+			};
+		}
+	};
 </script>
 
 </body>
