@@ -15,7 +15,7 @@ public class ViewController : MonoBehaviour {
     private GameObject viewsObject;
 
 	private Transform pointerOn = null;
-	private ViewBehavior draggingView = null;
+	private Transform draggingView = null;
 	private SteamVR_Controller.Device input {
 		get {
 			return SteamVR_Controller.Input (SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost));
@@ -132,9 +132,15 @@ public class ViewController : MonoBehaviour {
 
 		var _input = input;
 
-		ViewBehavior target = pointerOn.parent.gameObject.GetComponent<ViewBehavior> ();
-		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger) && target != null && displayedViewList.Concat (hiddenViewList).Contains (target)) {
-			draggingView = target;
+		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
+			if (pointerOn.CompareTag("ViewPlane") && displayedViewList.Concat (hiddenViewList).Contains (pointerOn.parent.gameObject.GetComponent<ViewBehavior> ()))
+				draggingView = pointerOn.parent;
+			
+			if (pointerOn.CompareTag ("ViewClose")) {
+				ViewBehavior view = pointerOn.parent.parent.gameObject.GetComponent<ViewBehavior> ();
+				if (displayedViewList.Concat (hiddenViewList).Contains (view))
+					view.OnCloseBtnPressed ();
+			}
 		}
 
 		if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
@@ -143,7 +149,7 @@ public class ViewController : MonoBehaviour {
 
 		if (draggingView != null) {
 			Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
-			draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+			draggingView.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
 		}
 		//SteamVR_Controller.Input(deviceIndex).TriggerHapticPulse(1000);
 	}
