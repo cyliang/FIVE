@@ -152,7 +152,7 @@ public class ViewController : MonoBehaviour {
 			gripTime = Time.time;
 		} else if (_input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
 			isEditing = !isEditing;
-            _input.TriggerHapticPulse();
+            _input.TriggerHapticPulse(3999);
 			gripTime = -1f;
 		} else if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
 			isInUI = !isInUI;
@@ -198,7 +198,7 @@ public class ViewController : MonoBehaviour {
         float otherEleAngle = standEleAngle == -22f ? 27f : -22f;
         float otherLeftMost = -(draggingView.otherList.Count() - 1) / 2f * 20;
 
-        if (elevationAngle < standEleAngle - 20 || elevationAngle > standEleAngle + 20) {
+		if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, standEleAngle)) > 20) {
             float newLRAngle = selfLeftMost;
             foreach (var view in draggingView.selfList) {
                 if (view != draggingView.viewBehavior) {
@@ -207,8 +207,8 @@ public class ViewController : MonoBehaviour {
                 }
             }
 
-            if (elevationAngle > otherEleAngle - 20 && elevationAngle < otherEleAngle + 20) {
-                int newIndex = Mathf.RoundToInt((leftRightAngle - otherLeftMost) / 20);
+			if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, otherEleAngle)) < 20) {
+				int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(otherLeftMost, leftRightAngle) / 20);
                 if (newIndex < 0)
                     newIndex = 0;
                 else if (newIndex > draggingView.otherList.Count)
@@ -229,12 +229,18 @@ public class ViewController : MonoBehaviour {
                 draggingView.newList = draggingView.otherList;
                 draggingView.oldList = draggingView.selfList;
             } else {
+				newLRAngle = otherLeftMost;
+				foreach (var view in draggingView.otherList) {
+					draggingView.shiftAngleDestination [view] = new Vector3 (otherEleAngle, newLRAngle, 0);
+					newLRAngle += 20f;
+				}
+
                 draggingView.newIndex = draggingView.index;
                 draggingView.newList = draggingView.selfList;
-                draggingView.oldList = draggingView.otherList;
+                draggingView.oldList = draggingView.selfList;
             }
         } else {
-            int newIndex = Mathf.RoundToInt((leftRightAngle - selfLeftMost) / 20);
+			int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(selfLeftMost, leftRightAngle) / 20);
             if (newIndex < 0)
                 newIndex = 0;
             else if (newIndex > draggingView.selfList.Count - 1)
@@ -248,7 +254,7 @@ public class ViewController : MonoBehaviour {
                 }
             }
             newLRAngle += 20f;
-            foreach (var view in draggingView.selfList.Skip(newIndex)) {
+			foreach (var view in draggingView.selfList.Skip(newIndex + (newIndex > draggingView.index ? 1 : 0))) {
                 if (view != draggingView.viewBehavior) {
                     draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
                     newLRAngle += 20f;
@@ -257,7 +263,7 @@ public class ViewController : MonoBehaviour {
 
             draggingView.newIndex = newIndex;
             draggingView.newList = draggingView.selfList;
-            draggingView.oldList = draggingView.otherList;
+            draggingView.oldList = draggingView.selfList;
         }
 
         updateAllViewsWhenDragging();
@@ -266,7 +272,7 @@ public class ViewController : MonoBehaviour {
     void updateAllViewsWhenDragging() {
         foreach (var view in draggingView.shiftAngleDestination) {
             Vector3 originalAngle = view.Key.transform.eulerAngles;
-            originalAngle.y = Mathf.MoveTowards(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
+            originalAngle.y = Mathf.MoveTowardsAngle(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
             view.Key.transform.eulerAngles = originalAngle;
         }
     }
@@ -274,7 +280,11 @@ public class ViewController : MonoBehaviour {
     void commitDraggingResult() {
         if (draggingView.newList != draggingView.selfList || draggingView.newIndex != draggingView.index) {
             draggingView.oldList.Remove(draggingView.viewBehavior.selfNode);
-            draggingView.newList.AddBefore(draggingView.newList.ElementAt(draggingView.newIndex).selfNode, draggingView.viewBehavior.selfNode);
+
+			if (draggingView.newIndex >= draggingView.newList.Count)
+				draggingView.newList.AddLast (draggingView.viewBehavior.selfNode);
+			else
+				draggingView.newList.AddBefore(draggingView.newList.ElementAt(draggingView.newIndex).selfNode, draggingView.viewBehavior.selfNode);
         }
 
         showViewUI();
