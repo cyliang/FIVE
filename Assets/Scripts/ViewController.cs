@@ -71,6 +71,8 @@ public class ViewController : MonoBehaviour {
         }
 
 		checkPressedDown ();
+        if (draggingView != null)
+            processDragging();
 	}
 
     void createView() {
@@ -138,6 +140,7 @@ public class ViewController : MonoBehaviour {
 			gripTime = Time.time;
 		} else if (_input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
 			isEditing = !isEditing;
+            _input.TriggerHapticPulse();
 			gripTime = -1f;
 		} else if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
 			isInUI = !isInUI;
@@ -147,7 +150,7 @@ public class ViewController : MonoBehaviour {
 			return;
 		
 		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
-			if (pointerOn.CompareTag("ViewPlane") && displayedViewList.Concat (hiddenViewList).Contains (pointerOn.parent.gameObject.GetComponent<ViewBehavior> ()))
+            if (pointerOn.CompareTag("ViewPlane"))
 				draggingView = pointerOn.parent;
 			
 			if (pointerOn.CompareTag ("ViewClose")) {
@@ -161,10 +164,10 @@ public class ViewController : MonoBehaviour {
 			draggingView = null;
 		}
 
-		if (draggingView != null) {
-			Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
-			draggingView.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
-		}
-		//SteamVR_Controller.Input(deviceIndex).TriggerHapticPulse(1000);
+    }
+
+    void processDragging() {
+		Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
+		draggingView.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
 	}
 }
