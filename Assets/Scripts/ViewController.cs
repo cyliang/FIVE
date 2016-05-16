@@ -23,7 +23,7 @@ public class ViewController : MonoBehaviour {
 
         public Dictionary<ViewBehavior, Vector3> shiftAngleDestination;
         public int newIndex;
-        public LinkedList<ViewBehavior> newList, oldList;
+        public LinkedList<ViewBehavior> newList;
     }
 
 	private Transform pointerOn = null;
@@ -194,12 +194,11 @@ public class ViewController : MonoBehaviour {
         float elevationAngle = draggingView.transform.eulerAngles.x;
         float leftRightAngle = draggingView.transform.eulerAngles.y;
         float standEleAngle = draggingView.selfList == displayedViewList ? -22f : 27f;
-        float selfLeftMost = -(draggingView.selfList.Count() - 1) / 2f * 20;
         float otherEleAngle = standEleAngle == -22f ? 27f : -22f;
-        float otherLeftMost = -(draggingView.otherList.Count() - 1) / 2f * 20;
+		float newLRAngle;
 
 		if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, standEleAngle)) > 20) {
-            float newLRAngle = selfLeftMost;
+			newLRAngle = -(draggingView.selfList.Count() - 2) / 2f * 20;
             foreach (var view in draggingView.selfList) {
                 if (view != draggingView.viewBehavior) {
                     draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
@@ -208,13 +207,13 @@ public class ViewController : MonoBehaviour {
             }
 
 			if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, otherEleAngle)) < 20) {
-				int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(otherLeftMost, leftRightAngle) / 20);
+				newLRAngle = -(draggingView.otherList.Count()) / 2f * 20;
+				int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
                 if (newIndex < 0)
                     newIndex = 0;
                 else if (newIndex > draggingView.otherList.Count)
                     newIndex = draggingView.otherList.Count;
 
-                newLRAngle = otherLeftMost;
                 foreach (var view in draggingView.otherList.Take(newIndex)) {
                     draggingView.shiftAngleDestination[view] = new Vector3(otherEleAngle, newLRAngle, 0);
                     newLRAngle += 20f;
@@ -227,26 +226,18 @@ public class ViewController : MonoBehaviour {
 
                 draggingView.newIndex = newIndex;
                 draggingView.newList = draggingView.otherList;
-                draggingView.oldList = draggingView.selfList;
             } else {
-				newLRAngle = otherLeftMost;
-				foreach (var view in draggingView.otherList) {
-					draggingView.shiftAngleDestination [view] = new Vector3 (otherEleAngle, newLRAngle, 0);
-					newLRAngle += 20f;
-				}
-
                 draggingView.newIndex = draggingView.index;
                 draggingView.newList = draggingView.selfList;
-                draggingView.oldList = draggingView.selfList;
             }
-        } else {
-			int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(selfLeftMost, leftRightAngle) / 20);
+		} else {
+			newLRAngle = -(draggingView.selfList.Count() - 1) / 2f * 20;
+			int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
             if (newIndex < 0)
                 newIndex = 0;
             else if (newIndex > draggingView.selfList.Count - 1)
                 newIndex = draggingView.selfList.Count - 1;
 
-            float newLRAngle = selfLeftMost;
             foreach (var view in draggingView.selfList.Take(newIndex + (newIndex > draggingView.index ? 1 : 0))) {
                 if (view != draggingView.viewBehavior) {
                     draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
@@ -263,8 +254,15 @@ public class ViewController : MonoBehaviour {
 
             draggingView.newIndex = newIndex;
             draggingView.newList = draggingView.selfList;
-            draggingView.oldList = draggingView.selfList;
         }
+
+		if (draggingView.newList == draggingView.selfList && draggingView.newIndex == draggingView.index) {
+			newLRAngle = -(draggingView.otherList.Count () - 1) / 2f * 20;
+			foreach (var view in draggingView.otherList) {
+				draggingView.shiftAngleDestination [view] = new Vector3 (otherEleAngle, newLRAngle, 0);
+				newLRAngle += 20f;
+			}
+		}
 
         updateAllViewsWhenDragging();
 	}
@@ -279,7 +277,7 @@ public class ViewController : MonoBehaviour {
 
     void commitDraggingResult() {
         if (draggingView.newList != draggingView.selfList || draggingView.newIndex != draggingView.index) {
-            draggingView.oldList.Remove(draggingView.viewBehavior.selfNode);
+            draggingView.selfList.Remove(draggingView.viewBehavior.selfNode);
 
 			if (draggingView.newIndex >= draggingView.newList.Count)
 				draggingView.newList.AddLast (draggingView.viewBehavior.selfNode);
