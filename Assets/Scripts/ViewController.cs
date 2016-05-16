@@ -8,6 +8,7 @@ public class ViewController : MonoBehaviour {
     public GameObject viewPrefab;
     public GameObject UIObject;
 	public SteamVR_LaserPointer laserPointer;
+    public float shiftSpeed;
 
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
@@ -241,5 +242,15 @@ public class ViewController : MonoBehaviour {
                 }
             }
         }
+
+        updateAllViewsWhenDragging();
 	}
+
+    void updateAllViewsWhenDragging() {
+        foreach (var view in draggingView.shiftAngleDestination) {
+            Vector3 originalAngle = view.Key.transform.eulerAngles;
+            originalAngle.y = Mathf.MoveTowards(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
+            view.Key.transform.eulerAngles = originalAngle;
+        }
+    }
 }
