@@ -14,8 +14,17 @@ public class ViewController : MonoBehaviour {
     private LinkedList<ViewBehavior> hiddenViewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
 
+    struct DraggingView {
+        public Transform transform;
+        public ViewBehavior viewBehavior;
+        public LinkedList<ViewBehavior> selfList, otherList;
+        public int index;
+
+        public Dictionary<ViewBehavior, Vector3> shiftAngleDestination;
+    }
+
 	private Transform pointerOn = null;
-	private Transform draggingView = null;
+	private DraggingView draggingView;
 	private SteamVR_Controller.Device input {
 		get {
 			return SteamVR_Controller.Input (SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost));
@@ -71,7 +80,7 @@ public class ViewController : MonoBehaviour {
         }
 
 		checkPressedDown ();
-        if (draggingView != null)
+        if (draggingView.transform != null)
             processDragging();
 	}
 
@@ -150,8 +159,14 @@ public class ViewController : MonoBehaviour {
 			return;
 		
 		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
-            if (pointerOn.CompareTag("ViewPlane"))
-				draggingView = pointerOn.parent;
+            if (pointerOn.CompareTag("ViewPlane")) {
+                draggingView.transform = pointerOn.parent;
+                draggingView.viewBehavior = pointerOn.parent.GetComponent<ViewBehavior>();
+                draggingView.selfList = draggingView.viewBehavior.selfNode.List;
+                draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
+                draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
+                draggingView.shiftAngleDestination = new Dictionary<ViewBehavior, Vector3>();
+            }
 			
 			if (pointerOn.CompareTag ("ViewClose")) {
 				ViewBehavior view = pointerOn.parent.parent.gameObject.GetComponent<ViewBehavior> ();
@@ -161,13 +176,70 @@ public class ViewController : MonoBehaviour {
 		}
 
 		if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
-			draggingView = null;
+			draggingView.transform = null;
 		}
 
     }
 
     void processDragging() {
 		Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
-		draggingView.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+
+        float elevationAngle = draggingView.transform.eulerAngles.x;
+        float leftRightAngle = draggingView.transform.eulerAngles.y;
+        float standEleAngle = draggingView.selfList == displayedViewList ? -22f : 27f;
+        float selfLeftMost = -(draggingView.selfList.Count() - 1) / 2f * 20;
+        float otherEleAngle = standEleAngle == -22f ? 27f : -22f;
+        float otherLeftMost = -(draggingView.otherList.Count() - 1) / 2f * 20;
+
+        if (elevationAngle < standEleAngle - 20 || elevationAngle > standEleAngle + 20) {
+            float newLRAngle = selfLeftMost;
+            foreach (var view in draggingView.selfList) {
+                if (view != draggingView.viewBehavior) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+            }
+
+            if (elevationAngle > otherEleAngle - 20 && elevationAngle < otherEleAngle + 20) {
+                int newIndex = Mathf.RoundToInt((leftRightAngle - otherLeftMost) / 20);
+                if (newIndex < 0)
+                    newIndex = 0;
+                else if (newIndex > draggingView.otherList.Count)
+                    newIndex = draggingView.otherList.Count;
+
+                newLRAngle = otherLeftMost;
+                foreach (var view in draggingView.otherList.Take(newIndex)) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(otherEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+                newLRAngle += 20f;
+                foreach (var view in draggingView.otherList.Skip(newIndex)) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(otherEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+            }
+        } else {
+            int newIndex = Mathf.RoundToInt((leftRightAngle - selfLeftMost) / 20);
+            if (newIndex < 0)
+                newIndex = 0;
+            else if (newIndex > draggingView.selfList.Count - 1)
+                newIndex = draggingView.selfList.Count - 1;
+
+            float newLRAngle = selfLeftMost;
+            foreach (var view in draggingView.selfList.Take(newIndex + (newIndex > draggingView.index ? 1 : 0))) {
+                if (view != draggingView.viewBehavior) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+            }
+            newLRAngle += 20f;
+            foreach (var view in draggingView.selfList.Skip(newIndex)) {
+                if (view != draggingView.viewBehavior) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+            }
+        }
 	}
 }
