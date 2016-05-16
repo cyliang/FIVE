@@ -25,6 +25,11 @@ public class SteamVR_LaserPointer : MonoBehaviour
     public event PointerEventHandler PointerIn;
     public event PointerEventHandler PointerOut;
 
+	public float pointerDistance {
+		get;
+		private set;
+	}
+
     Transform previousContact = null;
 
 	// Use this for initialization
@@ -124,6 +129,7 @@ public class SteamVR_LaserPointer : MonoBehaviour
         {
             dist = hit.distance;
         }
+		pointerDistance = hit.distance;
 
         if (controller != null && controller.triggerPressed)
         {

@@ -7,11 +7,20 @@ public class ViewController : MonoBehaviour {
 
     public GameObject viewPrefab;
     public GameObject UIObject;
+	public SteamVR_LaserPointer laserPointer;
 
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
     private LinkedList<ViewBehavior> hiddenViewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
+
+	private Transform pointerOn = null;
+	private ViewBehavior draggingView = null;
+	private SteamVR_Controller.Device input {
+		get {
+			return SteamVR_Controller.Input (SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost));
+		}
+	}
 
     private bool _isInUI;
     private bool isInUI {
@@ -43,6 +52,9 @@ public class ViewController : MonoBehaviour {
         
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
+
+		laserPointer.PointerIn += OnLaserPointerIn;
+		laserPointer.PointerOut += OnLaserPointerOut;
 	}
 	
 	// Update is called once per frame
@@ -56,6 +68,8 @@ public class ViewController : MonoBehaviour {
                 isEditing = !isEditing;
             }
         }
+
+		checkPressedDown ();
 	}
 
     void createView() {
@@ -102,4 +116,35 @@ public class ViewController : MonoBehaviour {
         }
     }
 
+	void OnLaserPointerIn(object sender, PointerEventArgs e) {		
+		if (pointerOn == null) {
+			pointerOn = e.target;
+		}
+	}
+
+	void OnLaserPointerOut(object sender, PointerEventArgs e) {
+		pointerOn = null;
+	}
+
+	void checkPressedDown() {
+		if (!isEditing || pointerOn == null)
+			return;
+
+		var _input = input;
+
+		ViewBehavior target = pointerOn.parent.gameObject.GetComponent<ViewBehavior> ();
+		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger) && target != null && displayedViewList.Concat (hiddenViewList).Contains (target)) {
+			draggingView = target;
+		}
+
+		if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
+			draggingView = null;
+		}
+
+		if (draggingView != null) {
+			Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
+			draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+		}
+		//SteamVR_Controller.Input(deviceIndex).TriggerHapticPulse(1000);
+	}
 }
