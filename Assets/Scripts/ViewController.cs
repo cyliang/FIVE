@@ -21,6 +21,7 @@ public class ViewController : MonoBehaviour {
 			return SteamVR_Controller.Input (SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost));
 		}
 	}
+	private float gripTime = 0;
 
     private bool _isInUI;
     private bool isInUI {
@@ -127,11 +128,24 @@ public class ViewController : MonoBehaviour {
 	}
 
 	void checkPressedDown() {
-		if (!isEditing || pointerOn == null)
-			return;
-
 		var _input = input;
 
+		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
+			createView();
+		}
+
+		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
+			gripTime = Time.time;
+		} else if (_input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
+			isEditing = !isEditing;
+			gripTime = -1f;
+		} else if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
+			isInUI = !isInUI;
+		}
+
+		if (!isEditing || pointerOn == null)
+			return;
+		
 		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
 			if (pointerOn.CompareTag("ViewPlane") && displayedViewList.Concat (hiddenViewList).Contains (pointerOn.parent.gameObject.GetComponent<ViewBehavior> ()))
 				draggingView = pointerOn.parent;
