@@ -24,6 +24,8 @@ public class ViewController : MonoBehaviour {
         public Dictionary<ViewBehavior, Vector3> shiftAngleDestination;
         public int newIndex;
         public LinkedList<ViewBehavior> newList;
+
+        public float farAngle;
     }
 
 	private Transform pointerOn = null;
@@ -199,22 +201,19 @@ public class ViewController : MonoBehaviour {
 
 		if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, standEleAngle)) > 20) {
             // View has been dragged out of its original line (displayed or hidden).
-            // Other views in **original line** shall shift to new angles.
-			newLRAngle = -(draggingView.selfList.Count() - 2) / 2f * 20;
-            foreach (var view in draggingView.selfList) {
-                if (view != draggingView.viewBehavior) {
-                    draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
-                    newLRAngle += 20f;
-                }
-            }
+            bool displayExceed = false;
 
 			if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, otherEleAngle)) < 20) {
                 // View has been dragged to the other line, i.e. displayed -> hidden or hidden -> displayed
                 // Views in **the other line** shall shift to new angles.
-				newLRAngle = -(draggingView.otherList.Count()) / 2f * 20;
-				int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
+                displayExceed = draggingView.selfList != displayedViewList && displayedViewList.Count == 6;
+                newLRAngle = -(draggingView.otherList.Count() - (displayExceed ? 1 : 0)) / 2f * 20;
+
+                int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
                 if (newIndex < 0)
                     newIndex = 0;
+                else if (displayExceed && newIndex >= 6)
+                    newIndex = 5;
                 else if (newIndex > draggingView.otherList.Count)
                     newIndex = draggingView.otherList.Count;
 
@@ -236,7 +235,26 @@ public class ViewController : MonoBehaviour {
                 draggingView.newIndex = draggingView.index;
                 draggingView.newList = draggingView.selfList;
             }
-		} else {
+
+            // Other views in **original line** shall shift to new angles.
+            if (displayExceed) {
+                newLRAngle = -(draggingView.selfList.Count() - 1) / 2f * 20;
+                Vector3 oldAngle = draggingView.shiftAngleDestination[displayedViewList.Last()];
+                Vector3 newAngle = new Vector3(standEleAngle, newLRAngle, 0);
+                draggingView.farAngle = Mathf.Abs(Quaternion.Angle(Quaternion.Euler(oldAngle), Quaternion.Euler(newAngle)));
+                draggingView.shiftAngleDestination[displayedViewList.Last()] = newAngle;
+                newLRAngle += 20f;
+            } else {
+                newLRAngle = -(draggingView.selfList.Count() - 2) / 2f * 20;
+            }
+
+            foreach (var view in draggingView.selfList) {
+                if (view != draggingView.viewBehavior) {
+                    draggingView.shiftAngleDestination[view] = new Vector3(standEleAngle, newLRAngle, 0);
+                    newLRAngle += 20f;
+                }
+            }
+        } else {
             // View is not dragged out of original line, but may change its index, i.e. displayed -> displayed or hidden -> hidden
             // Other views in **original line** shall shift to new angles.
 			newLRAngle = -(draggingView.selfList.Count() - 1) / 2f * 20;
@@ -280,8 +298,12 @@ public class ViewController : MonoBehaviour {
     void updateAllViewsWhenDragging() {
         foreach (var view in draggingView.shiftAngleDestination) {
             Vector3 originalAngle = view.Key.transform.eulerAngles;
-            originalAngle.y = Mathf.MoveTowardsAngle(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
-            view.Key.transform.eulerAngles = originalAngle;
+            if (originalAngle.x == view.Value.x) {
+                originalAngle.y = Mathf.MoveTowardsAngle(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
+                view.Key.transform.eulerAngles = originalAngle;
+            } else {
+                view.Key.transform.rotation = Quaternion.RotateTowards(Quaternion.Euler(originalAngle), Quaternion.Euler(view.Value), Time.deltaTime * shiftSpeed / 20f * draggingView.farAngle);
+            }
         }
     }
 
@@ -293,6 +315,12 @@ public class ViewController : MonoBehaviour {
 				draggingView.newList.AddLast (draggingView.viewBehavior.selfNode);
 			else
 				draggingView.newList.AddBefore(draggingView.newList.ElementAt(draggingView.newIndex).selfNode, draggingView.viewBehavior.selfNode);
+
+            if (displayedViewList.Count > 6) {
+                LinkedListNode<ViewBehavior> node = displayedViewList.Last;
+                displayedViewList.RemoveLast();
+                hiddenViewList.AddFirst(node);
+            }
         }
 
         showViewUI();
