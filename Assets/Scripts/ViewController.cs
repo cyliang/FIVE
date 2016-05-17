@@ -198,6 +198,8 @@ public class ViewController : MonoBehaviour {
 		float newLRAngle;
 
 		if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, standEleAngle)) > 20) {
+            // View has been dragged out of its original line (displayed or hidden).
+            // Other views in **original line** shall shift to new angles.
 			newLRAngle = -(draggingView.selfList.Count() - 2) / 2f * 20;
             foreach (var view in draggingView.selfList) {
                 if (view != draggingView.viewBehavior) {
@@ -207,6 +209,8 @@ public class ViewController : MonoBehaviour {
             }
 
 			if (Mathf.Abs(Mathf.DeltaAngle(elevationAngle, otherEleAngle)) < 20) {
+                // View has been dragged to the other line, i.e. displayed -> hidden or hidden -> displayed
+                // Views in **the other line** shall shift to new angles.
 				newLRAngle = -(draggingView.otherList.Count()) / 2f * 20;
 				int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
                 if (newIndex < 0)
@@ -224,13 +228,17 @@ public class ViewController : MonoBehaviour {
                     newLRAngle += 20f;
                 }
 
+                // View is dragged to the other line, with new index.
                 draggingView.newIndex = newIndex;
                 draggingView.newList = draggingView.otherList;
             } else {
+                // View is dragged out of original line but not in the other line, so keep original index and line.
                 draggingView.newIndex = draggingView.index;
                 draggingView.newList = draggingView.selfList;
             }
 		} else {
+            // View is not dragged out of original line, but may change its index, i.e. displayed -> displayed or hidden -> hidden
+            // Other views in **original line** shall shift to new angles.
 			newLRAngle = -(draggingView.selfList.Count() - 1) / 2f * 20;
 			int newIndex = Mathf.RoundToInt(Mathf.DeltaAngle(newLRAngle, leftRightAngle) / 20);
             if (newIndex < 0)
@@ -256,7 +264,9 @@ public class ViewController : MonoBehaviour {
             draggingView.newList = draggingView.selfList;
         }
 
-		if (draggingView.newList == draggingView.selfList && draggingView.newIndex == draggingView.index) {
+		if (draggingView.newList != draggingView.otherList) {
+            // If angles of views in **other line** have not been updated,
+            // Update their angles to make sure all work correctly.
 			newLRAngle = -(draggingView.otherList.Count () - 1) / 2f * 20;
 			foreach (var view in draggingView.otherList) {
 				draggingView.shiftAngleDestination [view] = new Vector3 (otherEleAngle, newLRAngle, 0);
