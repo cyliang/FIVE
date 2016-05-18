@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class MenuController : MonoBehaviour {
 
@@ -11,20 +12,19 @@ public class MenuController : MonoBehaviour {
 	}
 	public GameObject camera;
 	public GameObject canvas;
-	public GameObject menuBtn;
+	public GameObject menuBtnPrefab;
 
 	private static MenuController instance;
 
-	private Button createViewBtn;
+	private Dictionary<GameObject, Button> buttons = new Dictionary<GameObject, Button>();
 
 	// Use this for initialization
 	void Start () {
 		instance = this;
-		createViewBtn = Instantiate (menuBtn).GetComponent<Button>();
-		createViewBtn.transform.SetParent(canvas.transform, false);
 
-		InputController.laserPointer.PointerIn += onLaserIn;
-		InputController.laserPointer.PointerOut += onLaserOut;
+		GameObject createViewBtn = Instantiate (menuBtnPrefab);
+		createViewBtn.transform.SetParent(canvas.transform, false);
+		buttons.Add (createViewBtn, createViewBtn.GetComponent<Button>());
 	}
 	
 	// Update is called once per frame
@@ -37,11 +37,5 @@ public class MenuController : MonoBehaviour {
 				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
 			}
 		}
-	}
-
-	void onLaserIn(object sender, PointerEventArgs e) {
-	}
-
-	void onLaserOut(object sender, PointerEventArgs e) {
 	}
 }

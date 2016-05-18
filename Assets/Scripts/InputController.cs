@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class InputController: MonoBehaviour {
@@ -19,5 +20,12 @@ public class InputController: MonoBehaviour {
 
 	void Start() {
 		instance = this;
+
+		laserPointer.PointerIn += (object sender, PointerEventArgs e) => {
+			EventSystem.current.SetSelectedGameObject (e.target.gameObject);
+		};
+		laserPointer.PointerOut += (object sender, PointerEventArgs e) => {
+			EventSystem.current.SetSelectedGameObject (null);
+		};
 	}
 }
