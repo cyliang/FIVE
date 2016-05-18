@@ -30,11 +30,6 @@ public class ViewController : MonoBehaviour {
 
 	private Transform pointerOn = null;
 	private DraggingView draggingView;
-	private SteamVR_Controller.Device input {
-		get {
-			return SteamVR_Controller.Input (SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost));
-		}
-	}
 	private float gripTime = 0;
 
     private bool _isInUI;
@@ -144,26 +139,26 @@ public class ViewController : MonoBehaviour {
 	}
 
 	void checkPressedDown() {
-		var _input = input;
+		var input = InputController.rightController;
 
-		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
+		if (input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
 			createView();
 		}
 
-		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
+		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
 			gripTime = Time.time;
-		} else if (_input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
+		} else if (input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
 			isEditing = !isEditing;
-            _input.TriggerHapticPulse(3999);
+            input.TriggerHapticPulse(3999);
 			gripTime = -1f;
-		} else if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
+		} else if (input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
 			isInUI = !isInUI;
 		}
 
 		if (!isEditing || pointerOn == null)
 			return;
 		
-		if (_input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
+		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
             if (pointerOn.CompareTag("ViewPlane")) {
                 draggingView.transform = pointerOn.parent;
                 draggingView.viewBehavior = pointerOn.parent.GetComponent<ViewBehavior>();
@@ -180,7 +175,7 @@ public class ViewController : MonoBehaviour {
 			}
 		}
 
-		if (_input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
+		if (input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
             if (draggingView.transform != null) {
                 commitDraggingResult();
                 draggingView.transform = null;
