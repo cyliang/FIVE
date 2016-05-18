@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -22,20 +23,31 @@ public class MenuController : MonoBehaviour {
 	void Start () {
 		instance = this;
 
-		GameObject createViewBtn = Instantiate (menuBtnPrefab);
+		Button createViewBtn = Instantiate (menuBtnPrefab).GetComponent<Button>();
 		createViewBtn.transform.SetParent(canvas.transform, false);
-		buttons.Add (createViewBtn, createViewBtn.GetComponent<Button>());
+		createViewBtn.onClick.AddListener (() => {
+			ViewController.instance.createView();
+		});
+		buttons.Add (createViewBtn.gameObject, createViewBtn);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (InputController.rightController.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
+		var input = InputController.rightController;
+
+		if (input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
 			if (isActive) {
 				canvas.SetActive (false);
 			} else {
 				canvas.SetActive (true);
 				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
 			}
+		}
+
+		Button clickedBtn;
+		GameObject selected = EventSystem.current.currentSelectedGameObject;
+		if (selected != null && input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger) && buttons.TryGetValue(selected, out clickedBtn)) {
+			clickedBtn.onClick.Invoke ();
 		}
 	}
 }
