@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public static class FileManager {
+public class FileManager: MonoBehaviour {
 
     public class File {
         public ViewBehavior view;
@@ -16,38 +16,43 @@ public static class FileManager {
                 System.IO.File.WriteAllText(fullPath, value);
             }
         }
+			
+		public void loadFile(string filePath) {
+			path = filePath;
+			fullPath = string.Format("{0}/{1}", instance.projectPath, filePath);
+
+			Dictionary<string, object> qry = new Dictionary<string, object>();
+			Dictionary<string, string> param = new Dictionary<string, string>();
+			param.Add("path", filePath);
+			param.Add("content", content);
+			qry.Add("cmd", "loadFile");
+			qry.Add("params", param);
+
+			view.makeQuery(qry, delegate (bool success, string _) {
+				if (!success)
+					Debug.LogError("Query failed.");
+			});
+		}
+
+		public void saveFile() {
+			Dictionary<string, object> qry = new Dictionary<string, object>();
+			qry.Add("cmd", "saveFile");
+			qry.Add("params", new Dictionary<string, object>());
+
+			view.makeQuery(qry, delegate (bool success, string value) {
+				if (!success)
+					Debug.LogError("Query failed.");
+				else {
+					content = (UWKJson.Deserialize(value) as IDictionary<string, string>)["content"];
+				}
+			});
+		}
     }
     
-    public static string projectPath;
-        
-    public static void loadFile(File file, string filePath) {
-        file.path = filePath;
-        file.fullPath = string.Format("{0}/{1}", projectPath, filePath);
+    public string projectPath;
+	private static FileManager instance;
 
-        Dictionary<string, object> qry = new Dictionary<string, object>();
-        Dictionary<string, string> param = new Dictionary<string, string>();
-        param.Add("path", filePath);
-        param.Add("content", file.content);
-        qry.Add("cmd", "loadFile");
-        qry.Add("params", param);
-
-        file.view.makeQuery(qry, delegate (bool success, string _) {
-            if (!success)
-                Debug.LogError("Query failed.");
-        });
-    }
-
-    public static void saveFile(File file) {
-        Dictionary<string, object> qry = new Dictionary<string, object>();
-        qry.Add("cmd", "saveFile");
-        qry.Add("params", new Dictionary<string, object>());
-
-        file.view.makeQuery(qry, delegate (bool success, string value) {
-            if (!success)
-                Debug.LogError("Query failed.");
-            else {
-                file.content = (UWKJson.Deserialize(value) as IDictionary<string, string>)["content"];
-            }
-        });
-    }
+	void Start() {
+		instance = this;
+	}
 }
