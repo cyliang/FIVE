@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class ViewController : MonoBehaviour {
+	public static ViewController instance;
 
     public GameObject viewPrefab;
     public GameObject UIObject;
@@ -57,6 +58,7 @@ public class ViewController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
+		instance = this;
         viewsObject = new GameObject("Views");
         viewsObject.transform.parent = transform;
         
@@ -84,7 +86,7 @@ public class ViewController : MonoBehaviour {
             processDragging();
 	}
 
-    void createView() {
+	public void createView() {
         ViewBehavior newView = Instantiate(viewPrefab).GetComponent<ViewBehavior>();
         newView.transform.parent = viewsObject.transform;
         newView.viewController = this;
@@ -141,10 +143,6 @@ public class ViewController : MonoBehaviour {
 	void checkPressedDown() {
 		var input = InputController.rightController;
 
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
-			createView();
-		}
-
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
 			gripTime = Time.time;
 		} else if (input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
@@ -155,7 +153,7 @@ public class ViewController : MonoBehaviour {
 			isInUI = !isInUI;
 		}
 
-		if (!isEditing || pointerOn == null)
+		if (MenuBehavior.isActive || !isEditing || pointerOn == null)
 			return;
 		
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
