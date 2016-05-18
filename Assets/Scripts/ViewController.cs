@@ -298,7 +298,7 @@ public class ViewController : MonoBehaviour {
     void updateAllViewsWhenDragging() {
         foreach (var view in draggingView.shiftAngleDestination) {
             Vector3 originalAngle = view.Key.transform.eulerAngles;
-            if (originalAngle.x == view.Value.x) {
+			if (Mathf.Abs(Mathf.DeltaAngle(originalAngle.x, view.Value.x)) < 0.001f) {
                 originalAngle.y = Mathf.MoveTowardsAngle(originalAngle.y, view.Value.y, Time.deltaTime * shiftSpeed);
                 view.Key.transform.eulerAngles = originalAngle;
             } else {
