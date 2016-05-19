@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ViewController : MonoBehaviour {
+public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
 	public static ViewController instance;
 
     public GameObject viewPrefab;
@@ -29,7 +30,7 @@ public class ViewController : MonoBehaviour {
         public float farAngle;
     }
 
-	private Transform pointerOn = null;
+	private GameObject pointerOn = null;
 	private DraggingView draggingView;
 	private float gripTime = 0;
 
@@ -64,9 +65,6 @@ public class ViewController : MonoBehaviour {
         
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
-
-		laserPointer.PointerIn += OnLaserPointerIn;
-		laserPointer.PointerOut += OnLaserPointerOut;
 	}
 	
 	// Update is called once per frame
@@ -130,13 +128,13 @@ public class ViewController : MonoBehaviour {
         }
     }
 
-	void OnLaserPointerIn(object sender, PointerEventArgs e) {		
+	public void OnPointerEnter(PointerEventData e) {		
 		if (pointerOn == null) {
-			pointerOn = e.target;
+			pointerOn = e.pointerEnter;
 		}
 	}
 
-	void OnLaserPointerOut(object sender, PointerEventArgs e) {
+	public void OnPointerExit(PointerEventData e) {
 		pointerOn = null;
 	}
 
@@ -158,8 +156,8 @@ public class ViewController : MonoBehaviour {
 		
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
             if (pointerOn.CompareTag("ViewPlane")) {
-                draggingView.transform = pointerOn.parent;
-                draggingView.viewBehavior = pointerOn.parent.GetComponent<ViewBehavior>();
+				draggingView.transform = pointerOn.transform.parent;
+				draggingView.viewBehavior = pointerOn.transform.parent.GetComponent<ViewBehavior>();
                 draggingView.selfList = draggingView.viewBehavior.selfNode.List;
                 draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
                 draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
@@ -167,7 +165,7 @@ public class ViewController : MonoBehaviour {
             }
 			
 			if (pointerOn.CompareTag ("ViewClose")) {
-				ViewBehavior view = pointerOn.parent.parent.gameObject.GetComponent<ViewBehavior> ();
+				ViewBehavior view = pointerOn.transform.parent.parent.gameObject.GetComponent<ViewBehavior> ();
 				if (displayedViewList.Concat (hiddenViewList).Contains (view))
 					view.OnCloseBtnPressed ();
 			}
