@@ -10,7 +10,6 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     public GameObject viewPrefab;
     public GameObject UIObject;
     public float shiftSpeed;
-	public SteamVR_LaserPointer laserPointer;
 
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
@@ -181,7 +180,8 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     }
 
     void processDragging() {
-		Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
+		Transform pointer = ViveControllerInput.Instance.Controllers [0].transform;
+		Vector3 targetPosition = pointer.position + pointer.forward.normalized * ViveControllerInput.Instance.raycastHit.distance;
 		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
 
         float elevationAngle = draggingView.transform.eulerAngles.x;

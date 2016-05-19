@@ -40,6 +40,7 @@ public class ViveControllerInput : BaseInputModule
     public Camera ControllerCamera;
 
 	public SteamVR_Controller.Device[] ControllerDevices { get; private set; }
+	public RaycastHit raycastHit { get; private set; }
 
     protected override void Start()
     {
@@ -110,11 +111,12 @@ public class ViveControllerInput : BaseInputModule
 		Ray raycast = new Ray(Controllers[index].transform.position, Controllers[index].transform.forward);
 		RaycastHit hit;
 		bool bHit = Physics.Raycast(raycast, out hit);
+		raycastHit = hit;
 		RaycastResult result = new RaycastResult ();
 
-		result.distance = hit.distance;
-		result.gameObject = bHit ? hit.transform.gameObject : null;
-		result.worldPosition = hit.point;
+		result.distance = raycastHit.distance;
+		result.gameObject = bHit ? raycastHit.transform.gameObject : null;
+		result.worldPosition = raycastHit.point;
 		PointEvents[index].pointerCurrentRaycast = result;
         
 		if (PointEvents[index].pointerCurrentRaycast.gameObject != null)

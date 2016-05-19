@@ -1,36 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public struct PointerEventArgs
-{
-    public uint controllerIndex;
-    public uint flags;
-    public float distance;
-    public Transform target;
-}
-
-public delegate void PointerEventHandler(object sender, PointerEventArgs e);
-
-
 public class SteamVR_LaserPointer : MonoBehaviour
 {
-    public bool active = true;
     public Color color;
     public float thickness = 0.002f;
     public GameObject holder;
     public GameObject pointer;
     bool isActive = false;
     public bool addRigidBody = false;
-    public Transform reference;
-    public event PointerEventHandler PointerIn;
-    public event PointerEventHandler PointerOut;
-
-	public float pointerDistance {
-		get;
-		private set;
-	}
-
-    Transform previousContact = null;
 
 	// Use this for initialization
 	void Start ()
@@ -65,19 +43,6 @@ public class SteamVR_LaserPointer : MonoBehaviour
         pointer.GetComponent<MeshRenderer>().material = newMaterial;
 	}
 
-    public virtual void OnPointerIn(PointerEventArgs e)
-    {
-        if (PointerIn != null)
-            PointerIn(this, e);
-    }
-
-    public virtual void OnPointerOut(PointerEventArgs e)
-    {
-        if (PointerOut != null)
-            PointerOut(this, e);
-    }
-
-
     // Update is called once per frame
 	void Update ()
     {
@@ -91,45 +56,12 @@ public class SteamVR_LaserPointer : MonoBehaviour
 
         SteamVR_TrackedController controller = GetComponent<SteamVR_TrackedController>();
 
-        Ray raycast = new Ray(transform.position, transform.forward);
-        RaycastHit hit;
-        bool bHit = Physics.Raycast(raycast, out hit);
+		RaycastHit hit = ViveControllerInput.Instance.raycastHit;
 
-        if(previousContact && previousContact != hit.transform)
-        {
-            PointerEventArgs args = new PointerEventArgs();
-            if (controller != null)
-            {
-                args.controllerIndex = controller.controllerIndex;
-            }
-            args.distance = 0f;
-            args.flags = 0;
-            args.target = previousContact;
-            OnPointerOut(args);
-            previousContact = null;
-        }
-        if(bHit && previousContact != hit.transform)
-        {
-            PointerEventArgs argsIn = new PointerEventArgs();
-            if (controller != null)
-            {
-                argsIn.controllerIndex = controller.controllerIndex;
-            }
-            argsIn.distance = hit.distance;
-            argsIn.flags = 0;
-            argsIn.target = hit.transform;
-            OnPointerIn(argsIn);
-            previousContact = hit.transform;
-        }
-        if(!bHit)
-        {
-            previousContact = null;
-        }
-        if (bHit && hit.distance < 100f)
+		if (hit.transform != null && hit.distance < 100f)
         {
             dist = hit.distance;
         }
-		pointerDistance = hit.distance;
 
         if (controller != null && controller.triggerPressed)
         {
