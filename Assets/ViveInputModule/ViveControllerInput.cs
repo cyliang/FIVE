@@ -8,6 +8,9 @@ public class ViveControllerInput : BaseInputModule
 {
     public static ViveControllerInput Instance;
 
+	[Header(" [Controller setup]")]
+	public SteamVR_TrackedObject[] Controllers;
+
     [Header(" [Cursor setup]")]
     public Sprite CursorSprite;
     public Material CursorMaterial;
@@ -36,8 +39,6 @@ public class ViveControllerInput : BaseInputModule
     [Tooltip("Generated non rendering camera (used for raycasting ui)")]
     public Camera ControllerCamera;
 
-    private SteamVR_ControllerManager ControllerManager;
-    private SteamVR_TrackedObject[] Controllers;
     private SteamVR_Controller.Device[] ControllerDevices;
 
     protected override void Start()
@@ -52,8 +53,6 @@ public class ViveControllerInput : BaseInputModule
             ControllerCamera.clearFlags = CameraClearFlags.Nothing; //CameraClearFlags.Depth;
             ControllerCamera.cullingMask = 0; // 1 << LayerMask.NameToLayer("UI"); 
 
-            ControllerManager = GameObject.FindObjectOfType<SteamVR_ControllerManager>();
-            Controllers = new SteamVR_TrackedObject[] { ControllerManager.left.GetComponent<SteamVR_TrackedObject>(), ControllerManager.right.GetComponent<SteamVR_TrackedObject>() };
             ControllerDevices = new SteamVR_Controller.Device[Controllers.Length];
             Cursors = new RectTransform[Controllers.Length];
 
@@ -96,26 +95,31 @@ public class ViveControllerInput : BaseInputModule
     }
 
     // use screen midpoint as locked pointer location, enabling look location to be the "mouse"
-    private bool GetLookPointerEventData(int index)
-    {
-        if (PointEvents[index] == null)
-            PointEvents[index] = new PointerEventData(base.eventSystem);
-        else
-            PointEvents[index].Reset();
+    private bool GetPointedPointerEventData(int index)
+	{
+		if (PointEvents[index] == null)
+			PointEvents[index] = new PointerEventData(base.eventSystem);
+		else
+			PointEvents[index].Reset();
 
         PointEvents[index].delta = Vector2.zero;
         PointEvents[index].position = new Vector2(Screen.width / 2, Screen.height / 2);
         PointEvents[index].scrollDelta = Vector2.zero;
 
-        base.eventSystem.RaycastAll(PointEvents[index], m_RaycastResultCache);
-        PointEvents[index].pointerCurrentRaycast = FindFirstRaycast(m_RaycastResultCache);
-        if (PointEvents[index].pointerCurrentRaycast.gameObject != null)
+		Ray raycast = new Ray(Controllers[index].transform.position, Controllers[index].transform.forward);
+		RaycastHit hit;
+		bool bHit = Physics.Raycast(raycast, out hit);
+		RaycastResult result = new RaycastResult ();
+
+		result.distance = hit.distance;
+		result.gameObject = hit.transform != null ? hit.transform.gameObject : null;
+		result.worldPosition = hit.point;
+		PointEvents[index].pointerCurrentRaycast = result;
+        
+		if (PointEvents[index].pointerCurrentRaycast.gameObject != null)
         {
             GuiHit = true; //gets set to false at the beginning of the process event
         }
-
-        m_RaycastResultCache.Clear();
-
         return true;
     }
 
@@ -129,23 +133,16 @@ public class ViveControllerInput : BaseInputModule
 
             if (pointData.pointerEnter != null)
             {
-                RectTransform draggingPlane = pointData.pointerEnter.GetComponent<RectTransform>();
-                Vector3 globalLookPos;
-                if (RectTransformUtility.ScreenPointToWorldPointInRectangle(draggingPlane, pointData.position, pointData.enterEventCamera, out globalLookPos))
+				Cursors[index].position = pointData.pointerCurrentRaycast.worldPosition;
+				Cursors[index].rotation = pointData.pointerEnter.transform.rotation;
+
+				float cursorScale = pointData.pointerCurrentRaycast.distance * NormalCursorScale;
+                if (cursorScale < NormalCursorScale)
                 {
-                    Cursors[index].position = globalLookPos;
-                    Cursors[index].rotation = draggingPlane.rotation;
-
-                    // scale cursor based on distance to camera
-                    float lookPointDistance = (Cursors[index].position - Camera.main.transform.position).magnitude;
-                    float cursorScale = lookPointDistance * NormalCursorScale;
-                    if (cursorScale < NormalCursorScale)
-                    {
-                        cursorScale = NormalCursorScale;
-                    }
-
-                    Cursors[index].localScale = Vector3.one * cursorScale;
+                    cursorScale = NormalCursorScale;
                 }
+
+                Cursors[index].localScale = Vector3.one * cursorScale;
             }
         }
         else
@@ -234,7 +231,7 @@ public class ViveControllerInput : BaseInputModule
 
             UpdateCameraPosition(index);
 
-            bool hit = GetLookPointerEventData(index);
+            bool hit = GetPointedPointerEventData(index);
             if (hit == false)
                 continue;
 

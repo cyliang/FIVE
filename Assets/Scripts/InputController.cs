@@ -24,7 +24,7 @@ public class InputController: MonoBehaviour {
 
 	void Start() {
 		instance = this;
-
+		/*
 		laserPointer.PointerIn += (object sender, PointerEventArgs e) => {
             laserOn = e.target;
             
@@ -80,7 +80,7 @@ public class InputController: MonoBehaviour {
                     s.OnPointerClick(data);
             }
         };
-
+*/
         //data.button = PointerEventData.InputButton.Left;
     }
 }

@@ -43,11 +43,5 @@ public class MenuController : MonoBehaviour {
 				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
 			}
 		}
-
-		Button clickedBtn;
-		GameObject selected = EventSystem.current.currentSelectedGameObject;
-		if (selected != null && input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger) && buttons.TryGetValue(selected, out clickedBtn)) {
-			clickedBtn.onClick.Invoke ();
-		}
 	}
 }
