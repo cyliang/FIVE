@@ -33,7 +33,7 @@ public class MenuController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		var input = InputController.rightController;
+		var input = ViveControllerInput.Instance.ControllerDevices[0];
 
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
 			if (isActive) {

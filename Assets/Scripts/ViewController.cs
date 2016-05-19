@@ -9,6 +9,7 @@ public class ViewController : MonoBehaviour {
     public GameObject viewPrefab;
     public GameObject UIObject;
     public float shiftSpeed;
+	public SteamVR_LaserPointer laserPointer;
 
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
@@ -64,8 +65,8 @@ public class ViewController : MonoBehaviour {
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
 
-		InputController.laserPointer.PointerIn += OnLaserPointerIn;
-		InputController.laserPointer.PointerOut += OnLaserPointerOut;
+		laserPointer.PointerIn += OnLaserPointerIn;
+		laserPointer.PointerOut += OnLaserPointerOut;
 	}
 	
 	// Update is called once per frame
@@ -140,7 +141,7 @@ public class ViewController : MonoBehaviour {
 	}
 
 	void checkPressedDown() {
-		var input = InputController.rightController;
+		var input = ViveControllerInput.Instance.ControllerDevices[0];
 
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
 			gripTime = Time.time;
@@ -182,8 +183,6 @@ public class ViewController : MonoBehaviour {
     }
 
     void processDragging() {
-		var laserPointer = InputController.laserPointer;
-
 		Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
 		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
 

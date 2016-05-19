@@ -39,7 +39,7 @@ public class ViveControllerInput : BaseInputModule
     [Tooltip("Generated non rendering camera (used for raycasting ui)")]
     public Camera ControllerCamera;
 
-    private SteamVR_Controller.Device[] ControllerDevices;
+	public SteamVR_Controller.Device[] ControllerDevices { get; private set; }
 
     protected override void Start()
     {
@@ -54,6 +54,7 @@ public class ViveControllerInput : BaseInputModule
             ControllerCamera.cullingMask = 0; // 1 << LayerMask.NameToLayer("UI"); 
 
             ControllerDevices = new SteamVR_Controller.Device[Controllers.Length];
+			InitializeControllers ();
             Cursors = new RectTransform[Controllers.Length];
 
             for (int index = 0; index < Cursors.Length; index++)
@@ -112,7 +113,7 @@ public class ViveControllerInput : BaseInputModule
 		RaycastResult result = new RaycastResult ();
 
 		result.distance = hit.distance;
-		result.gameObject = hit.transform != null ? hit.transform.gameObject : null;
+		result.gameObject = bHit ? hit.transform.gameObject : null;
 		result.worldPosition = hit.point;
 		PointEvents[index].pointerCurrentRaycast = result;
         
