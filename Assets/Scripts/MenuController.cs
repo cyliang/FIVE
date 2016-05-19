@@ -14,6 +14,7 @@ public class MenuController : MonoBehaviour {
 	public GameObject camera;
 	public GameObject canvas;
 	public GameObject menuBtnPrefab;
+	public SteamVR_TrackedController controller;
 
 	private static MenuController instance;
 
@@ -22,6 +23,15 @@ public class MenuController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		instance = this;
+
+		controller.MenuButtonClicked += (object sender, ClickedEventArgs e) => {
+			if (isActive) {
+				canvas.SetActive (false);
+			} else {
+				canvas.SetActive (true);
+				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
+			}
+		};
 
 		Button createViewBtn = Instantiate (menuBtnPrefab).GetComponent<Button>();
 		createViewBtn.transform.SetParent(canvas.transform, false);
@@ -33,21 +43,5 @@ public class MenuController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		var input = InputController.rightController;
-
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.ApplicationMenu)) {
-			if (isActive) {
-				canvas.SetActive (false);
-			} else {
-				canvas.SetActive (true);
-				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
-			}
-		}
-
-		Button clickedBtn;
-		GameObject selected = EventSystem.current.currentSelectedGameObject;
-		if (selected != null && input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger) && buttons.TryGetValue(selected, out clickedBtn)) {
-			clickedBtn.onClick.Invoke ();
-		}
 	}
 }

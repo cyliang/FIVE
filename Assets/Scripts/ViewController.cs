@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ViewController : MonoBehaviour {
+public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
 	public static ViewController instance;
 
+	public SteamVR_TrackedController controller;
     public GameObject viewPrefab;
     public GameObject UIObject;
     public float shiftSpeed;
@@ -28,7 +30,6 @@ public class ViewController : MonoBehaviour {
         public float farAngle;
     }
 
-	private Transform pointerOn = null;
 	private DraggingView draggingView;
 	private float gripTime = 0;
 
@@ -64,8 +65,7 @@ public class ViewController : MonoBehaviour {
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
 
-		InputController.laserPointer.PointerIn += OnLaserPointerIn;
-		InputController.laserPointer.PointerOut += OnLaserPointerOut;
+		listenGrip ();
 	}
 	
 	// Update is called once per frame
@@ -80,9 +80,7 @@ public class ViewController : MonoBehaviour {
             }
         }
 
-		checkPressedDown ();
-        if (draggingView.transform != null)
-            processDragging();
+		updateGrip ();
 	}
 
 	public void createView() {
@@ -127,65 +125,58 @@ public class ViewController : MonoBehaviour {
             view.transform.eulerAngles = new Vector3(elevationAngle, firstAngle, 0);
             firstAngle += deltaAngle;
         }
-    }
-
-	void OnLaserPointerIn(object sender, PointerEventArgs e) {		
-		if (pointerOn == null) {
-			pointerOn = e.target;
-		}
 	}
 
-	void OnLaserPointerOut(object sender, PointerEventArgs e) {
-		pointerOn = null;
-	}
-
-	void checkPressedDown() {
-		var input = InputController.rightController;
-
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
+	void listenGrip() {
+		controller.Gripped += (object sender, ClickedEventArgs e) => {
 			gripTime = Time.time;
-		} else if (input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
+		};
+		controller.Ungripped += (object sender, ClickedEventArgs e) => {
+			if (gripTime != -1f)
+				isInUI = !isInUI;
+		};
+	}
+
+	void updateGrip() {
+		if (controller.gripped && isInUI && gripTime != -1f && Time.time - gripTime >= 0.5f) {
 			isEditing = !isEditing;
-            input.TriggerHapticPulse(3999);
+			SteamVR_Controller.Input((int) controller.controllerIndex).TriggerHapticPulse(3999);
 			gripTime = -1f;
-		} else if (input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
-			isInUI = !isInUI;
 		}
+	}
 
-		if (MenuController.isActive || !isEditing || pointerOn == null)
+	public void OnPointerClick(PointerEventData e) {
+		GameObject pointerOn = e.pointerEnter;
+		if (!MenuController.isActive && isEditing && pointerOn.CompareTag ("ViewClose")) {
+			ViewBehavior view = pointerOn.transform.parent.parent.gameObject.GetComponent<ViewBehavior> ();
+			if (displayedViewList.Concat (hiddenViewList).Contains (view))
+				view.OnCloseBtnPressed ();
+		}
+	}
+
+	public void OnBeginDrag(PointerEventData e) {
+		GameObject pointerOn = e.pointerEnter;
+		if (!MenuController.isActive && isEditing && pointerOn.CompareTag("ViewPlane")) {
+			draggingView.transform = pointerOn.transform.parent;
+			draggingView.viewBehavior = pointerOn.transform.parent.GetComponent<ViewBehavior>();
+			draggingView.selfList = draggingView.viewBehavior.selfNode.List;
+			draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
+			draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
+			draggingView.shiftAngleDestination = new Dictionary<ViewBehavior, Vector3>();
+		}
+	}
+
+	public void OnEndDrag(PointerEventData e) {
+		if (draggingView.transform != null) {
+			commitDraggingResult();
+			draggingView.transform = null;
+		}
+	}
+
+	public void OnDrag(PointerEventData e) {
+		if (draggingView.transform == null)
 			return;
-		
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
-            if (pointerOn.CompareTag("ViewPlane")) {
-                draggingView.transform = pointerOn.parent;
-                draggingView.viewBehavior = pointerOn.parent.GetComponent<ViewBehavior>();
-                draggingView.selfList = draggingView.viewBehavior.selfNode.List;
-                draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
-                draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
-                draggingView.shiftAngleDestination = new Dictionary<ViewBehavior, Vector3>();
-            }
-			
-			if (pointerOn.CompareTag ("ViewClose")) {
-				ViewBehavior view = pointerOn.parent.parent.gameObject.GetComponent<ViewBehavior> ();
-				if (displayedViewList.Concat (hiddenViewList).Contains (view))
-					view.OnCloseBtnPressed ();
-			}
-		}
-
-		if (input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
-            if (draggingView.transform != null) {
-                commitDraggingResult();
-                draggingView.transform = null;
-            }
-		}
-
-    }
-
-    void processDragging() {
-		var laserPointer = InputController.laserPointer;
-
-		Vector3 targetPosition = laserPointer.transform.position + laserPointer.transform.forward.normalized * laserPointer.pointerDistance;
-		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, e.pointerCurrentRaycast.worldPosition);
 
         float elevationAngle = draggingView.transform.eulerAngles.x;
         float leftRightAngle = draggingView.transform.eulerAngles.y;
