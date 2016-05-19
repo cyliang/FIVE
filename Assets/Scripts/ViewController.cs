@@ -7,6 +7,7 @@ using System.Linq;
 public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
 	public static ViewController instance;
 
+	public SteamVR_TrackedController controller;
     public GameObject viewPrefab;
     public GameObject UIObject;
     public float shiftSpeed;
@@ -63,6 +64,8 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
+
+		listenGrip ();
 	}
 	
 	// Update is called once per frame
@@ -77,7 +80,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
             }
         }
 
-		checkGrip ();
+		updateGrip ();
 	}
 
 	public void createView() {
@@ -122,7 +125,25 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
             view.transform.eulerAngles = new Vector3(elevationAngle, firstAngle, 0);
             firstAngle += deltaAngle;
         }
-    }
+	}
+
+	void listenGrip() {
+		controller.Gripped += (object sender, ClickedEventArgs e) => {
+			gripTime = Time.time;
+		};
+		controller.Ungripped += (object sender, ClickedEventArgs e) => {
+			if (gripTime != -1f)
+				isInUI = !isInUI;
+		};
+	}
+
+	void updateGrip() {
+		if (controller.gripped && isInUI && gripTime != -1f && Time.time - gripTime >= 0.5f) {
+			isEditing = !isEditing;
+			SteamVR_Controller.Input((int) controller.controllerIndex).TriggerHapticPulse(3999);
+			gripTime = -1f;
+		}
+	}
 
 	public void OnPointerClick(PointerEventData e) {
 		GameObject pointerOn = e.pointerEnter;
@@ -151,20 +172,6 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 			draggingView.transform = null;
 		}
 	}
-
-	void checkGrip() {
-		var input = ViveControllerInput.Instance.ControllerDevices[0];
-
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
-			gripTime = Time.time;
-		} else if (input.GetPress (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f && Time.time - gripTime >= 0.5f && isInUI) {
-			isEditing = !isEditing;
-            input.TriggerHapticPulse(3999);
-			gripTime = -1f;
-		} else if (input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
-			isInUI = !isInUI;
-		}
-    }
 
 	public void OnDrag(PointerEventData e) {
 		if (draggingView.transform == null)
