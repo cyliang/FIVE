@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
+public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler {
 	public static ViewController instance;
 
     public GameObject viewPrefab;
@@ -29,7 +29,6 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         public float farAngle;
     }
 
-	private GameObject pointerOn = null;
 	private DraggingView draggingView;
 	private float gripTime = 0;
 
@@ -78,7 +77,7 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
             }
         }
 
-		checkPressedDown ();
+		checkGrip ();
         if (draggingView.transform != null)
             processDragging();
 	}
@@ -127,17 +126,35 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
         }
     }
 
-	public void OnPointerEnter(PointerEventData e) {		
-		if (pointerOn == null) {
-			pointerOn = e.pointerEnter;
+	public void OnPointerClick(PointerEventData e) {
+		GameObject pointerOn = e.pointerEnter;
+		if (!MenuController.isActive && isEditing && pointerOn.CompareTag ("ViewClose")) {
+			ViewBehavior view = pointerOn.transform.parent.parent.gameObject.GetComponent<ViewBehavior> ();
+			if (displayedViewList.Concat (hiddenViewList).Contains (view))
+				view.OnCloseBtnPressed ();
 		}
 	}
 
-	public void OnPointerExit(PointerEventData e) {
-		pointerOn = null;
+	public void OnBeginDrag(PointerEventData e) {
+		GameObject pointerOn = e.pointerEnter;
+		if (!MenuController.isActive && isEditing && pointerOn.CompareTag("ViewPlane")) {
+			draggingView.transform = pointerOn.transform.parent;
+			draggingView.viewBehavior = pointerOn.transform.parent.GetComponent<ViewBehavior>();
+			draggingView.selfList = draggingView.viewBehavior.selfNode.List;
+			draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
+			draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
+			draggingView.shiftAngleDestination = new Dictionary<ViewBehavior, Vector3>();
+		}
 	}
 
-	void checkPressedDown() {
+	public void OnEndDrag(PointerEventData e) {
+		if (draggingView.transform != null) {
+			commitDraggingResult();
+			draggingView.transform = null;
+		}
+	}
+
+	void checkGrip() {
 		var input = ViveControllerInput.Instance.ControllerDevices[0];
 
 		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Grip)) {
@@ -149,34 +166,6 @@ public class ViewController : MonoBehaviour, IPointerEnterHandler, IPointerExitH
 		} else if (input.GetPressUp (SteamVR_Controller.ButtonMask.Grip) && gripTime != -1f) {
 			isInUI = !isInUI;
 		}
-
-		if (MenuController.isActive || !isEditing || pointerOn == null)
-			return;
-		
-		if (input.GetPressDown (SteamVR_Controller.ButtonMask.Trigger)) {
-            if (pointerOn.CompareTag("ViewPlane")) {
-				draggingView.transform = pointerOn.transform.parent;
-				draggingView.viewBehavior = pointerOn.transform.parent.GetComponent<ViewBehavior>();
-                draggingView.selfList = draggingView.viewBehavior.selfNode.List;
-                draggingView.otherList = draggingView.selfList == displayedViewList ? hiddenViewList : displayedViewList;
-                draggingView.index = draggingView.selfList.Select((item, inx) => new { item, inx }).First(x => x.item == draggingView.viewBehavior).inx;
-                draggingView.shiftAngleDestination = new Dictionary<ViewBehavior, Vector3>();
-            }
-			
-			if (pointerOn.CompareTag ("ViewClose")) {
-				ViewBehavior view = pointerOn.transform.parent.parent.gameObject.GetComponent<ViewBehavior> ();
-				if (displayedViewList.Concat (hiddenViewList).Contains (view))
-					view.OnCloseBtnPressed ();
-			}
-		}
-
-		if (input.GetPressUp (SteamVR_Controller.ButtonMask.Trigger)) {
-            if (draggingView.transform != null) {
-                commitDraggingResult();
-                draggingView.transform = null;
-            }
-		}
-
     }
 
     void processDragging() {
