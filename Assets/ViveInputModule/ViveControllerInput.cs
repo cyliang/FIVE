@@ -112,11 +112,17 @@ public class ViveControllerInput : BaseInputModule
 		RaycastHit hit;
 		bool bHit = Physics.Raycast(raycast, out hit);
 		raycastHit = hit;
-		RaycastResult result = new RaycastResult ();
+		var result = new RaycastResult {
+			gameObject = bHit ? hit.collider.gameObject : null,
+			distance = hit.distance,
+			worldPosition = hit.point,
+			worldNormal = hit.normal,
+			screenPosition = PointEvents[index].position,
+			index = 0,
+			sortingLayer = 0,
+			sortingOrder = 0
+		};
 
-		result.distance = raycastHit.distance;
-		result.gameObject = bHit ? raycastHit.transform.gameObject : null;
-		result.worldPosition = raycastHit.point;
 		PointEvents[index].pointerCurrentRaycast = result;
         
 		if (PointEvents[index].pointerCurrentRaycast.gameObject != null)
