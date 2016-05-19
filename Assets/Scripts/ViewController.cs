@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler {
+public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
 	public static ViewController instance;
 
     public GameObject viewPrefab;
@@ -78,8 +78,6 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         }
 
 		checkGrip ();
-        if (draggingView.transform != null)
-            processDragging();
 	}
 
 	public void createView() {
@@ -168,10 +166,10 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 		}
     }
 
-    void processDragging() {
-		Transform pointer = ViveControllerInput.Instance.Controllers [0].transform;
-		Vector3 targetPosition = pointer.position + pointer.forward.normalized * ViveControllerInput.Instance.raycastHit.distance;
-		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, targetPosition);
+	public void OnDrag(PointerEventData e) {
+		if (draggingView.transform == null)
+			return;
+		draggingView.transform.rotation = Quaternion.FromToRotation (Vector3.forward, e.pointerCurrentRaycast.worldPosition);
 
         float elevationAngle = draggingView.transform.eulerAngles.x;
         float leftRightAngle = draggingView.transform.eulerAngles.y;
