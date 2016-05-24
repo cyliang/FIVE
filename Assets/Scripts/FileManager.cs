@@ -51,7 +51,6 @@ public class FileManager: MonoBehaviour {
     }
     
     public string projectPath;
-    public MenuController menuController;
 
     [Header(" [File Browser]")]
     public Canvas FileBrowserCanvas;
@@ -62,5 +61,13 @@ public class FileManager: MonoBehaviour {
 
 	void Start() {
 		instance = this;
+
+        MenuController.addBtn("Change project path", () => {
+            openFileBrowser();
+        });
 	}
+
+    void openFileBrowser() {
+        FileBrowserCanvas.gameObject.SetActive(true);
+    }
 }

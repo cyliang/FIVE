@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
-	public static ViewController instance;
-
 	public SteamVR_TrackedController controller;
     public GameObject viewPrefab;
     public GameObject UIObject;
@@ -58,7 +56,6 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 
     // Use this for initialization
     void Start () {
-		instance = this;
         viewsObject = new GameObject("Views");
         viewsObject.transform.parent = transform;
         
@@ -66,6 +63,9 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         isInUI = false;
 
 		listenGrip ();
+        MenuController.addBtn("Create View", () => {
+            createView();
+        });
 	}
 	
 	// Update is called once per frame

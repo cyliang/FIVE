@@ -33,15 +33,17 @@ public class MenuController : MonoBehaviour {
 			}
 		};
 
-		Button createViewBtn = Instantiate (menuBtnPrefab).GetComponent<Button>();
-		createViewBtn.transform.SetParent(canvas.transform, false);
-		createViewBtn.onClick.AddListener (() => {
-			ViewController.instance.createView();
-		});
-		buttons.Add (createViewBtn.gameObject, createViewBtn);
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	}
+
+    public static void addBtn(string text, UnityEngine.Events.UnityAction onClick) {
+        Button btn = Instantiate(instance.menuBtnPrefab).GetComponent<Button>();
+        btn.GetComponentInChildren<Text>().text = text;
+        btn.transform.SetParent(instance.canvas.transform, false);
+        btn.onClick.AddListener(onClick);
+        instance.buttons.Add(btn.gameObject, btn);
+    }
 }
