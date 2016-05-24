@@ -65,6 +65,12 @@ public class FileManager: MonoBehaviour {
         MenuController.addBtn("Change project path", () => {
             openFileBrowser();
         });
+        btnCancel.onClick.AddListener(() => {
+            FileBrowserCanvas.gameObject.SetActive(false);
+        });
+        btnConfirm.onClick.AddListener(() => {
+            /* TODO */
+        });
 	}
 
     void openFileBrowser() {
