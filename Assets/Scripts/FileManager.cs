@@ -55,7 +55,9 @@ public class FileManager: MonoBehaviour {
     [Header(" [File Browser]")]
     public Canvas FileBrowserCanvas;
     public Text title, resultPath;
+    public GameObject directoryContent, fileContent;
     public Button btnConfirm, btnCancel;
+    public GameObject itemPrefab, itemSpacePrefab;
 
 	private static FileManager instance;
 
