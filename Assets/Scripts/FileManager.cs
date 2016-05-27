@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,9 +96,11 @@ public class FileManager: MonoBehaviour {
     private class DirStatus {
         public int depth;
         public bool expanded;
+        public TreeNode<DirStatus> treeNode;
         public DirectoryInfo dirInfo;
     }
     private TreeNode<DirStatus> fileBrowserRoot = new TreeNode<DirStatus>(new DirStatus());
+    private Dictionary<GameObject, DirStatus> dirDictionary = new Dictionary<GameObject, DirStatus>();
 
 	void Start() {
 		instance = this;
@@ -127,39 +130,52 @@ public class FileManager: MonoBehaviour {
 
         TreeNode<DirStatus> d = null;
         foreach (string drive in Directory.GetLogicalDrives()) {
-            var child = fileBrowserRoot.AddChild(new DirStatus {
+            var child = new DirStatus {
                 depth = 0,
                 expanded = false,
                 dirInfo = new DirectoryInfo(drive)
-            });
+            };
+            var childNode = fileBrowserRoot.AddChild(child);
+            child.treeNode = childNode;
             if (drive == parents[0].Name)
-                d = child;
+                d = childNode;
         }
         
         foreach (DirectoryInfo p in parents.Skip(1)) {
-            d = d.AddChild(new DirStatus {
+            var ds = new DirStatus {
                 depth = d.Value.depth + 1,
                 expanded = false,
                 dirInfo = p
-            });
+            };
+            d = d.AddChild(ds);
+            ds.treeNode = d;
         }
+        d.Value.expanded = true;
 
         foreach (DirectoryInfo subDir in d.Value.dirInfo.GetDirectories()) {
-            d.AddChild(new DirStatus {
+            var ds = new DirStatus {
                 depth = d.Value.depth + 1,
                 expanded = false,
                 dirInfo = subDir
-            });
+            };
+            ds.treeNode = d.AddChild(ds);
         }
     }
 
     void drawBrowser(bool dirFile) {
+        if (dirFile) {
+            foreach (var child in dirDictionary) {
+                Destroy(child.Key);
+            }
+            dirDictionary.Clear();
+        }
+
         foreach (var item in fileBrowserRoot.Flatten().Skip(1)) {
-            addBrowserItem(dirFile, item.dirInfo.Name, item.depth);
+            dirDictionary.Add(addBrowserItem(dirFile, item.dirInfo.Name, item.depth), item);
         }
     }
 
-    int addBrowserItem(bool dirFile, string text, int space, int index = -1) {
+    GameObject addBrowserItem(bool dirFile, string text, int space, int index = -1) {
         GameObject item = Instantiate(itemPrefab);
         item.transform.SetParent((dirFile ? directoryContent : fileContent).transform, false);
         item.GetComponentInChildren<Text>().text = text;
@@ -172,6 +188,33 @@ public class FileManager: MonoBehaviour {
             itemSpace.transform.SetAsFirstSibling();
         }
 
-        return item.transform.GetSiblingIndex();
+        item.GetComponent<Button>().onClick.AddListener(() => OnItemClick(item));
+
+        return item;
+    }
+
+    public void OnItemClick(GameObject item) {
+        DirStatus selectedDir;
+        if (item == null || !dirDictionary.TryGetValue(item, out selectedDir))
+            return;
+
+        if (selectedDir.expanded) {
+            selectedDir.treeNode.RemoveAllChildren();
+            selectedDir.expanded = false;
+        } else {
+            foreach (var subDir in selectedDir.dirInfo.GetDirectories()) {
+                if (selectedDir.treeNode.Children.Count == 0 || selectedDir.treeNode.Children.First().Value.dirInfo.Name != subDir.Name) {
+                    var newChild = new DirStatus() {
+                        depth = selectedDir.depth + 1,
+                        expanded = false,
+                        dirInfo = subDir
+                    };
+                    newChild.treeNode = selectedDir.treeNode.AddChild(newChild);
+                }
+            }
+            selectedDir.expanded = true;
+        }
+
+        drawBrowser(true);
     }
 }

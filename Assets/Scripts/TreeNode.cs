@@ -14,6 +14,8 @@ public class TreeNode<T> {
 
     public T Value { get { return _value; } }
 
+    public LinkedList<TreeNode<T>> Children { get { return _children; } }
+
     public TreeNode<T> AddChild(T value) {
         var node = new TreeNode<T>(value) { Parent = this };
         _children.AddLast(node);
@@ -22,6 +24,10 @@ public class TreeNode<T> {
     
     public bool RemoveChild(TreeNode<T> node) {
         return _children.Remove(node);
+    }
+
+    public void RemoveAllChildren() {
+        _children.Clear();
     }
 
     public void Traverse(Action<T> action) {
