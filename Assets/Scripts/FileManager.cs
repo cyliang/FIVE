@@ -114,7 +114,8 @@ public class FileManager: MonoBehaviour {
             fileBrowserStatus = FileBrowserStatus.Closed;
         });
         btnConfirm.onClick.AddListener(() => {
-            /* TODO */
+            projectPath = resultPath.text;
+            fileBrowserStatus = FileBrowserStatus.Closed;
         });
         initBrowserUntilRoot(projectPathInfo);
         drawBrowser(true);
@@ -216,5 +217,6 @@ public class FileManager: MonoBehaviour {
         }
 
         drawBrowser(true);
+        resultPath.text = selectedDir.dirInfo.FullName;
     }
 }
