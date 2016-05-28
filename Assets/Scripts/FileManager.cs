@@ -97,6 +97,7 @@ public class FileManager: MonoBehaviour {
         public int depth;
         public bool expanded;
         public TreeNode<DirStatus> treeNode;
+        public GameObject gameObject;
         public DirectoryInfo dirInfo;
     }
     private TreeNode<DirStatus> fileBrowserRoot = new TreeNode<DirStatus>(new DirStatus());
@@ -172,7 +173,8 @@ public class FileManager: MonoBehaviour {
         }
 
         foreach (var item in fileBrowserRoot.Flatten().Skip(1)) {
-            dirDictionary.Add(addBrowserItem(dirFile, item.dirInfo.Name, item.depth), item);
+            item.gameObject = addBrowserItem(dirFile, item.dirInfo.Name, item.depth);
+            dirDictionary.Add(item.gameObject, item);
         }
     }
 
@@ -217,6 +219,29 @@ public class FileManager: MonoBehaviour {
         }
 
         drawBrowser(true);
+        changeBtnColor(selectedDir.gameObject.GetComponent<Button>(), BtnState.Highlighted);
         resultPath.text = selectedDir.dirInfo.FullName;
+    }
+
+    enum BtnState {
+        Normal, Highlighted, Pressed, Disabled
+    }
+    void changeBtnColor(Button btn, BtnState state) {
+        Color targetColor = new Color(1, 1, 1, 0);
+        switch (state) {
+            case BtnState.Highlighted:
+                targetColor = btn.colors.highlightedColor;
+                break;
+            case BtnState.Pressed:
+                targetColor = btn.colors.pressedColor;
+                break;
+            case BtnState.Disabled:
+                targetColor = btn.colors.disabledColor;
+                break;
+        }
+
+        var originalColors = btn.colors;
+        originalColors.normalColor = targetColor;
+        btn.colors = originalColors;
     }
 }
