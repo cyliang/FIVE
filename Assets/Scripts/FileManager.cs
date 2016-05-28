@@ -61,7 +61,7 @@ public class FileManager: MonoBehaviour {
     public Text title, resultPath;
     public GameObject directoryContent, fileContent;
     public Button btnConfirm, btnCancel;
-    public GameObject itemPrefab, itemSpacePrefab;
+    public GameObject itemDirPrefab, itemFilePrefab, itemSpacePrefab;
 
     public enum FileBrowserStatus {
         Closed, ProjectPath, File
@@ -80,7 +80,7 @@ public class FileManager: MonoBehaviour {
                 case FileBrowserStatus.ProjectPath:
                     FileBrowserCanvas.gameObject.SetActive(true);
                     initBrowserUntilRoot(projectPathInfo);
-                    drawBrowser(true);
+                    drawBrowser();
                     break;
                 case FileBrowserStatus.File:
                     FileBrowserCanvas.gameObject.SetActive(true);
@@ -100,8 +100,10 @@ public class FileManager: MonoBehaviour {
         public GameObject gameObject;
         public DirectoryInfo dirInfo;
     }
-    private TreeNode<DirStatus> fileBrowserRoot = new TreeNode<DirStatus>(new DirStatus());
+    private TreeNode<DirStatus> dirRoot = new TreeNode<DirStatus>(new DirStatus());
     private Dictionary<GameObject, DirStatus> dirDictionary = new Dictionary<GameObject, DirStatus>();
+
+    private FileSystemInfo[] fileList;
 
 	void Start() {
 		instance = this;
@@ -119,7 +121,7 @@ public class FileManager: MonoBehaviour {
             fileBrowserStatus = FileBrowserStatus.Closed;
         });
         initBrowserUntilRoot(projectPathInfo);
-        drawBrowser(true);
+        drawBrowser();
     }
 
     void initBrowserUntilRoot(DirectoryInfo dir) {
@@ -137,7 +139,7 @@ public class FileManager: MonoBehaviour {
                 expanded = false,
                 dirInfo = new DirectoryInfo(drive)
             };
-            var childNode = fileBrowserRoot.AddChild(child);
+            var childNode = dirRoot.AddChild(child);
             child.treeNode = childNode;
             if (drive == parents[0].Name)
                 d = childNode;
@@ -154,7 +156,8 @@ public class FileManager: MonoBehaviour {
         }
         d.Value.expanded = true;
 
-        foreach (DirectoryInfo subDir in d.Value.dirInfo.GetDirectories()) {
+        fileList = d.Value.dirInfo.GetDirectories();
+        foreach (DirectoryInfo subDir in fileList) {
             var ds = new DirStatus {
                 depth = d.Value.depth + 1,
                 expanded = false,
@@ -164,23 +167,26 @@ public class FileManager: MonoBehaviour {
         }
     }
 
-    void drawBrowser(bool dirFile) {
-        if (dirFile) {
-            foreach (var child in dirDictionary) {
-                Destroy(child.Key);
-            }
-            dirDictionary.Clear();
+    void drawBrowser() {
+        foreach (var child in dirDictionary) {
+            Destroy(child.Key);
+        }
+        dirDictionary.Clear();
+        foreach (var item in dirRoot.Flatten().Skip(1)) {
+            item.gameObject = addBrowserDirItem(item.dirInfo.Name, item.depth);
+            dirDictionary.Add(item.gameObject, item);
         }
 
-        foreach (var item in fileBrowserRoot.Flatten().Skip(1)) {
-            item.gameObject = addBrowserItem(dirFile, item.dirInfo.Name, item.depth);
-            dirDictionary.Add(item.gameObject, item);
+        if (fileList == null)
+            return;
+        foreach (var item in fileList) {
+            addBrowserFileItem(item.Name, item.LastWriteTime);
         }
     }
 
-    GameObject addBrowserItem(bool dirFile, string text, int space, int index = -1) {
-        GameObject item = Instantiate(itemPrefab);
-        item.transform.SetParent((dirFile ? directoryContent : fileContent).transform, false);
+    GameObject addBrowserDirItem(string text, int space, int index = -1) {
+        GameObject item = Instantiate(itemDirPrefab);
+        item.transform.SetParent(directoryContent.transform, false);
         item.GetComponentInChildren<Text>().text = text;
         if (index != -1)
             item.transform.SetSiblingIndex(index);
@@ -196,6 +202,18 @@ public class FileManager: MonoBehaviour {
         return item;
     }
 
+    GameObject addBrowserFileItem(string name, System.DateTime updateTime) {
+        GameObject item = Instantiate(itemFilePrefab);
+        item.transform.SetParent(fileContent.transform, false);
+        var texts = item.GetComponentsInChildren<Text>();
+        texts[0].text = name;
+        texts[1].text = updateTime.ToString("yyyy/MM/dd HH:mm:ss");
+
+        //item.GetComponent<Button>().onClick.AddListener(() => OnItemClick(item));
+
+        return item;
+    }
+
     public void OnItemClick(GameObject item) {
         DirStatus selectedDir;
         if (item == null || !dirDictionary.TryGetValue(item, out selectedDir))
@@ -205,7 +223,8 @@ public class FileManager: MonoBehaviour {
             selectedDir.treeNode.RemoveAllChildren();
             selectedDir.expanded = false;
         } else {
-            foreach (var subDir in selectedDir.dirInfo.GetDirectories()) {
+            fileList = selectedDir.dirInfo.GetDirectories();
+            foreach (DirectoryInfo subDir in fileList) {
                 if (selectedDir.treeNode.Children.Count == 0 || selectedDir.treeNode.Children.First().Value.dirInfo.Name != subDir.Name) {
                     var newChild = new DirStatus() {
                         depth = selectedDir.depth + 1,
@@ -218,7 +237,7 @@ public class FileManager: MonoBehaviour {
             selectedDir.expanded = true;
         }
 
-        drawBrowser(true);
+        drawBrowser();
         changeBtnColor(selectedDir.gameObject.GetComponent<Button>(), BtnState.Highlighted);
         resultPath.text = selectedDir.dirInfo.FullName;
     }
