@@ -80,10 +80,10 @@ public class FileManager: MonoBehaviour {
                 case FileBrowserStatus.ProjectPath:
                     FileBrowserCanvas.gameObject.SetActive(true);
                     initBrowserUntilRoot(projectPathInfo);
-                    drawBrowser();
                     break;
                 case FileBrowserStatus.File:
                     FileBrowserCanvas.gameObject.SetActive(true);
+                    initBrowser();
                     break;
             }
         }
@@ -102,8 +102,8 @@ public class FileManager: MonoBehaviour {
     }
     private TreeNode<DirStatus> dirRoot = new TreeNode<DirStatus>(new DirStatus());
     private Dictionary<GameObject, DirStatus> dirDictionary = new Dictionary<GameObject, DirStatus>();
-
-    private FileSystemInfo[] fileList;
+    private FileInfo[] fileList;
+    private Dictionary<GameObject, FileInfo> fileDictionary = new Dictionary<GameObject, FileInfo>();
 
 	void Start() {
 		instance = this;
@@ -117,14 +117,42 @@ public class FileManager: MonoBehaviour {
             fileBrowserStatus = FileBrowserStatus.Closed;
         });
         btnConfirm.onClick.AddListener(() => {
-            projectPath = resultPath.text;
+            if (fileBrowserStatus == FileBrowserStatus.ProjectPath)
+                projectPath = resultPath.text;
+            else {
+                Debug.Log(resultPath.text);
+            }
             fileBrowserStatus = FileBrowserStatus.Closed;
         });
-        initBrowserUntilRoot(projectPathInfo);
+
+        fileBrowserStatus = FileBrowserStatus.ProjectPath;
+    }
+
+    void initBrowser() {
+        dirRoot.RemoveAllChildren();
+        DirStatus d = new DirStatus {
+            depth = 0,
+            expanded = true,
+            dirInfo = new DirectoryInfo(projectPath)
+        };
+        d.treeNode = dirRoot.AddChild(d);
+
+        foreach (DirectoryInfo subDir in d.dirInfo.GetDirectories()) {
+            var ds = new DirStatus {
+                depth = d.depth + 1,
+                expanded = false,
+                dirInfo = subDir
+            };
+            ds.treeNode = d.treeNode.AddChild(ds);
+        }
+
+        fileList = d.dirInfo.GetFiles();
+        resultPath.text = "";
         drawBrowser();
     }
 
     void initBrowserUntilRoot(DirectoryInfo dir) {
+        dirRoot.RemoveAllChildren();
         List<DirectoryInfo> parents = new List<DirectoryInfo>();
         while (dir != null) {
             parents.Add(dir);
@@ -156,8 +184,7 @@ public class FileManager: MonoBehaviour {
         }
         d.Value.expanded = true;
 
-        fileList = d.Value.dirInfo.GetDirectories();
-        foreach (DirectoryInfo subDir in fileList) {
+        foreach (DirectoryInfo subDir in d.Value.dirInfo.GetDirectories()) {
             var ds = new DirStatus {
                 depth = d.Value.depth + 1,
                 expanded = false,
@@ -165,13 +192,18 @@ public class FileManager: MonoBehaviour {
             };
             ds.treeNode = d.AddChild(ds);
         }
+
+        fileList = null;
+        resultPath.text = projectPath;
+        drawBrowser();
     }
 
     void drawBrowser() {
-        foreach (var child in dirDictionary) {
-            Destroy(child.Key);
+        foreach (var obj in dirDictionary.Keys.Concat(fileDictionary.Keys)) {
+            Destroy(obj);
         }
         dirDictionary.Clear();
+        fileDictionary.Clear();
         foreach (var item in dirRoot.Flatten().Skip(1)) {
             item.gameObject = addBrowserDirItem(item.dirInfo.Name, item.depth);
             dirDictionary.Add(item.gameObject, item);
@@ -180,7 +212,7 @@ public class FileManager: MonoBehaviour {
         if (fileList == null)
             return;
         foreach (var item in fileList) {
-            addBrowserFileItem(item.Name, item.LastWriteTime);
+            fileDictionary.Add(addBrowserFileItem(item.Name, item.LastWriteTime), item);
         }
     }
 
@@ -197,7 +229,7 @@ public class FileManager: MonoBehaviour {
             itemSpace.transform.SetAsFirstSibling();
         }
 
-        item.GetComponent<Button>().onClick.AddListener(() => OnItemClick(item));
+        item.GetComponent<Button>().onClick.AddListener(() => OnDirItemClick(item));
 
         return item;
     }
@@ -209,12 +241,12 @@ public class FileManager: MonoBehaviour {
         texts[0].text = name;
         texts[1].text = updateTime.ToString("yyyy/MM/dd HH:mm:ss");
 
-        //item.GetComponent<Button>().onClick.AddListener(() => OnItemClick(item));
+        item.GetComponent<Button>().onClick.AddListener(() => OnFileItemClick(item));
 
         return item;
     }
 
-    public void OnItemClick(GameObject item) {
+    public void OnDirItemClick(GameObject item) {
         DirStatus selectedDir;
         if (item == null || !dirDictionary.TryGetValue(item, out selectedDir))
             return;
@@ -223,8 +255,7 @@ public class FileManager: MonoBehaviour {
             selectedDir.treeNode.RemoveAllChildren();
             selectedDir.expanded = false;
         } else {
-            fileList = selectedDir.dirInfo.GetDirectories();
-            foreach (DirectoryInfo subDir in fileList) {
+            foreach (DirectoryInfo subDir in selectedDir.dirInfo.GetDirectories()) {
                 if (selectedDir.treeNode.Children.Count == 0 || selectedDir.treeNode.Children.First().Value.dirInfo.Name != subDir.Name) {
                     var newChild = new DirStatus() {
                         depth = selectedDir.depth + 1,
@@ -235,11 +266,20 @@ public class FileManager: MonoBehaviour {
                 }
             }
             selectedDir.expanded = true;
+            fileList = fileBrowserStatus == FileBrowserStatus.File ? selectedDir.dirInfo.GetFiles() : null;
         }
 
         drawBrowser();
         changeBtnColor(selectedDir.gameObject.GetComponent<Button>(), BtnState.Highlighted);
-        resultPath.text = selectedDir.dirInfo.FullName;
+        resultPath.text = fileBrowserStatus == FileBrowserStatus.File ? selectedDir.dirInfo.FullName.Substring(projectPath.Length).TrimStart(@"/\".ToCharArray()) : selectedDir.dirInfo.FullName;
+    }
+
+    public void OnFileItemClick(GameObject item) {
+        FileInfo selectedFile;
+        if (item == null || !fileDictionary.TryGetValue(item, out selectedFile))
+            return;
+        
+        resultPath.text = selectedFile.FullName.Substring(projectPath.Length + 1);
     }
 
     enum BtnState {
