@@ -12,7 +12,7 @@ public class MenuController : MonoBehaviour {
 		}
 	}
 	public GameObject camera;
-	public GameObject canvas;
+	public GameObject canvas, panel;
 	public GameObject menuBtnPrefab;
 	public SteamVR_TrackedController controller;
 
@@ -39,11 +39,16 @@ public class MenuController : MonoBehaviour {
 	void Update () {
 	}
 
-    public static void addBtn(string text, UnityEngine.Events.UnityAction onClick) {
-        Button btn = Instantiate(instance.menuBtnPrefab).GetComponent<Button>();
-        btn.GetComponentInChildren<Text>().text = text;
-        btn.transform.SetParent(instance.canvas.transform, false);
+    public static void addBtn(string txt, UnityEngine.Events.UnityAction onClick) {
+		GameObject obj = Instantiate (instance.menuBtnPrefab);
+        Button btn = obj.GetComponentInChildren<Button>();
+        Text text = btn.GetComponentInChildren<Text>();
+
+		text.text = txt;
+		text.resizeTextForBestFit = true;
+        obj.transform.SetParent(instance.panel.transform, false);
         btn.onClick.AddListener(onClick);
-        instance.buttons.Add(btn.gameObject, btn);
+		btn.onClick.AddListener (() => {instance.canvas.SetActive (false);});
+        instance.buttons.Add(obj, btn);
     }
 }
