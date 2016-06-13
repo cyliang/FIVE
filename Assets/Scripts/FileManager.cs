@@ -68,23 +68,23 @@ public class FileManager: MonoBehaviour {
         Closed, ProjectPath, File
     }
     private FileBrowserStatus _fileBrowserStatus;
-    public FileBrowserStatus fileBrowserStatus {
+    public static FileBrowserStatus fileBrowserStatus {
         get {
-            return _fileBrowserStatus;
+            return instance._fileBrowserStatus;
         }
         set {
-            _fileBrowserStatus = value;
+			instance._fileBrowserStatus = value;
             switch (value) {
                 case FileBrowserStatus.Closed:
-					showBrowser = false;
+					instance.showBrowser = false;
                     break;
                 case FileBrowserStatus.ProjectPath:
-					showBrowser = true;
-                    initBrowserUntilRoot(projectPathInfo);
+					instance.showBrowser = true;
+                    instance.initBrowserUntilRoot(instance.projectPathInfo);
                     break;
                 case FileBrowserStatus.File:
-					showBrowser = true;
-                    initBrowser();
+					instance.showBrowser = true;
+                    instance.initBrowser();
                     break;
             }
         }

@@ -64,7 +64,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 
 		listenGrip ();
         MenuController.addBtn("Create View", () => {
-            createView();
+			FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
         });
 	}
 	
