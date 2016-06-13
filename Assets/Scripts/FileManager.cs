@@ -55,6 +55,7 @@ public class FileManager: MonoBehaviour {
 
 
     public string projectPath;
+	public GameObject camera;
 
     [Header(" [File Browser]")]
     public Canvas FileBrowserCanvas;
@@ -75,19 +76,26 @@ public class FileManager: MonoBehaviour {
             _fileBrowserStatus = value;
             switch (value) {
                 case FileBrowserStatus.Closed:
-                    FileBrowserCanvas.gameObject.SetActive(false);
+					showBrowser = false;
                     break;
                 case FileBrowserStatus.ProjectPath:
-                    FileBrowserCanvas.gameObject.SetActive(true);
+					showBrowser = true;
                     initBrowserUntilRoot(projectPathInfo);
                     break;
                 case FileBrowserStatus.File:
-                    FileBrowserCanvas.gameObject.SetActive(true);
+					showBrowser = true;
                     initBrowser();
                     break;
             }
         }
     }
+	private bool showBrowser {
+		set {
+			if (value)
+				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
+			FileBrowserCanvas.gameObject.SetActive (value);
+		}
+	}
 
     private static FileManager instance;
 
