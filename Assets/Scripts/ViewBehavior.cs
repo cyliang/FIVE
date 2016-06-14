@@ -11,12 +11,11 @@ public class ViewBehavior : MonoBehaviour {
     public bool isShaking { get; set; }
     public ViewController viewController { get; set; }
     public LinkedListNode<ViewBehavior> selfNode { get; set; }
-    public FileManager.File fileOpened { get; private set; }
+	public readonly FileManager.File fileOpened = new FileManager.File();
 
 	// Use this for initialization
 	void Start () {
         isShaking = false;
-        fileOpened = new FileManager.File();
 	}
 	
 	// Update is called once per frame

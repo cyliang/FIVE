@@ -64,6 +64,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 
 		listenGrip ();
         MenuController.addBtn("Create View", () => {
+			FileManager.fileBrowserCallback = createView;
 			FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
         });
 	}
@@ -71,7 +72,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 	// Update is called once per frame
 	void Update () {
 	    if (Input.GetKeyDown(KeyCode.F1)) {
-            createView();
+            createView("");
         } else if (Input.GetKeyDown(KeyCode.F2)) {
             isInUI = !isInUI;
         } else if (Input.GetKeyDown(KeyCode.F3)) {
@@ -83,7 +84,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 		updateGrip ();
 	}
 
-	public void createView() {
+	public void createView(string filePath) {
         ViewBehavior newView = Instantiate(viewPrefab).GetComponent<ViewBehavior>();
         newView.transform.parent = viewsObject.transform;
         newView.viewController = this;

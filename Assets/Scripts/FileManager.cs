@@ -96,6 +96,8 @@ public class FileManager: MonoBehaviour {
 			FileBrowserCanvas.gameObject.SetActive (value);
 		}
 	}
+	public delegate void FileBrowserCallback(string fileName);
+	public static FileBrowserCallback fileBrowserCallback { get; set; }
 
     private static FileManager instance;
 
@@ -127,8 +129,9 @@ public class FileManager: MonoBehaviour {
         btnConfirm.onClick.AddListener(() => {
             if (fileBrowserStatus == FileBrowserStatus.ProjectPath)
                 projectPath = resultPath.text;
-            else {
-                Debug.Log(resultPath.text);
+			else if (fileBrowserCallback != null) {
+				fileBrowserCallback(resultPath.text);
+				fileBrowserCallback = null;
             }
             fileBrowserStatus = FileBrowserStatus.Closed;
         });
