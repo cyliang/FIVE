@@ -113,8 +113,6 @@ public class ExampleLoader : MonoBehaviour
             SceneManager.LoadScene("Example6WebQuery");
         }
 
-/*
-
         brect.y += 80;
         if (GUI.Button(brect, "Example 7- Alpha Mask"))
         {
@@ -124,11 +122,8 @@ public class ExampleLoader : MonoBehaviour
         brect.y += 80;
         if (GUI.Button(brect, "Clear Cookies"))
         {
-            // TODO: uWebKit Issue #8
-            // UWKCore.ClearCookies();
+            UWKWebView.ClearCookies();
         }
-
-        */
 
         brect.y += 80;
         if (GUI.Button(brect, "Quit"))

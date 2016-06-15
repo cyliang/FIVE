@@ -214,7 +214,8 @@ class WebBrowser : MonoBehaviour
 			} else {
 				currentURL = tabs [i].URL;
 				tabs [i].View.Show ();
-			}
+                tabs [i].View.FocusView();
+            }
 		}
 	}
 
