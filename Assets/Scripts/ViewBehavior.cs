@@ -6,13 +6,15 @@ public class ViewBehavior : MonoBehaviour {
     
     public UWKWebView webView;
     public GameObject closeBtn;
+    public GameObject selectedCircle;
     public float shakeSpeed, shakeAmplitude;
 
     public bool isShaking { get; set; }
+    public bool selected { set { selectedCircle.SetActive(value); } }
     public ViewController viewController { get; set; }
     public LinkedListNode<ViewBehavior> selfNode { get; set; }
-	public readonly FileManager.File fileOpened = new FileManager.File();
 
+	public readonly FileManager.File fileOpened = new FileManager.File();
     class QueryQueueData {
         public IDictionary qry;
         public JSEvalDelegate callback;

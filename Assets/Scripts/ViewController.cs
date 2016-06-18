@@ -139,7 +139,10 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
             firstAngle += deltaAngle;
         }
 
-        focusView = null;
+        if (focusView != null) {
+            focusView.selected = false;
+            focusView = null;
+        }
 	}
 
 	void listenGrip() {
@@ -334,7 +337,11 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
             select view;
 
         if (nextFocus.Count() != 0) {
+            if (focusView != null)
+                focusView.selected = false;
+
             focusView = nextFocus.First();
+            focusView.selected = true;
             UWKPlugin.UWK_FocusView(focusView.webView.ID);
         }
     }
