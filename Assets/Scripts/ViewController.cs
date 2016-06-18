@@ -10,10 +10,12 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
     public GameObject UIObject;
     public float shiftSpeed;
 
+    private Camera mainCam;
     private Vector3 viewOrigScale;
     private LinkedList<ViewBehavior> displayedViewList = new LinkedList<ViewBehavior>();
     private LinkedList<ViewBehavior> hiddenViewList = new LinkedList<ViewBehavior>();
     private GameObject viewsObject;
+    private ViewBehavior focusView = null;
 
     struct DraggingView {
         public Transform transform;
@@ -58,6 +60,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
     void Start () {
         viewsObject = new GameObject("Views");
         viewsObject.transform.parent = transform;
+        mainCam = Camera.main;
         
         viewOrigScale = viewPrefab.transform.localScale;
         isInUI = false;
@@ -82,6 +85,11 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         }
 
 		updateGrip ();
+    }
+
+    void LateUpdate() {
+        if (!isInUI)
+            setFocus();
 	}
 
 	public void createView(string filePath) {
@@ -126,6 +134,8 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
             view.transform.eulerAngles = new Vector3(elevationAngle, firstAngle, 0);
             firstAngle += deltaAngle;
         }
+
+        focusView = null;
 	}
 
 	void listenGrip() {
@@ -310,5 +320,18 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         }
 
         showViewUI();
+    }
+
+    void setFocus() {
+        IEnumerable<ViewBehavior> nextFocus = 
+            from view in displayedViewList
+            where view != focusView
+            where Mathf.Abs(Mathf.DeltaAngle(view.transform.eulerAngles.y, mainCam.transform.eulerAngles.y)) < 30f
+            select view;
+
+        if (nextFocus.Count() != 0) {
+            focusView = nextFocus.First();
+            UWKPlugin.UWK_FocusView(focusView.webView.ID);
+        }
     }
 }
