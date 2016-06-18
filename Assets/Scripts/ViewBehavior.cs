@@ -32,6 +32,6 @@ public class ViewBehavior : MonoBehaviour {
     }
 
     public void makeQuery(IDictionary qry, JSEvalDelegate callback = null) {
-        webView.EvaluateJavascript(string.Format("makeQuery(\"{0}\")", UWKJson.Serialize(qry)), callback);
+        webView.EvaluateJavascript(string.Format("makeQuery({0})", UWKJson.Serialize(qry)), callback);
     }
 }

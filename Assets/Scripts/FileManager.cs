@@ -32,9 +32,9 @@ public class FileManager: MonoBehaviour {
 			qry.Add("cmd", "loadFile");
 			qry.Add("params", param);
 
-			view.makeQuery(qry, delegate (bool success, string _) {
+			view.makeQuery(qry, delegate (bool success, string response) {
 				if (!success)
-					Debug.LogError("Query failed.");
+					Debug.LogError(response);
 			});
 		}
 

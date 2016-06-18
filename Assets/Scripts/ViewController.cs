@@ -75,7 +75,8 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 	// Update is called once per frame
 	void Update () {
 	    if (Input.GetKeyDown(KeyCode.F1)) {
-            createView("");
+            FileManager.fileBrowserCallback = createView;
+            FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
         } else if (Input.GetKeyDown(KeyCode.F2)) {
             isInUI = !isInUI;
         } else if (Input.GetKeyDown(KeyCode.F3)) {
@@ -98,8 +99,11 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
         newView.viewController = this;
         newView.selfNode = displayedViewList.Count < 6 ? displayedViewList.AddLast(newView) : hiddenViewList.AddLast(newView);
         rearrange();
-    }
 
+        newView.fileOpened.view = newView;
+        newView.fileOpened.loadFile(filePath);
+    }
+    
     public void removeView(LinkedListNode<ViewBehavior> view) {
         Destroy(view.Value.gameObject);
         view.List.Remove(view);
