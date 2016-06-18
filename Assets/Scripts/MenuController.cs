@@ -10,8 +10,13 @@ public class MenuController : MonoBehaviour {
 		get {
 			return instance.canvas.activeSelf;
 		}
+        set {
+            instance.canvas.SetActive(value);
+            if (value)
+                instance.transform.eulerAngles = new Vector3(0f, instance.mainCam.transform.eulerAngles.y, 0f);
+        }
 	}
-	public GameObject camera;
+	private Camera mainCam;
 	public GameObject canvas, panel;
 	public GameObject menuBtnPrefab;
 	public SteamVR_TrackedController controller;
@@ -23,20 +28,19 @@ public class MenuController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		instance = this;
+        mainCam = Camera.main;
 
 		controller.MenuButtonClicked += (object sender, ClickedEventArgs e) => {
-			if (isActive) {
-				canvas.SetActive (false);
-			} else {
-				canvas.SetActive (true);
-				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
-			}
+            isActive = !isActive;
 		};
 
 	}
 	
 	// Update is called once per frame
 	void Update () {
+        if (Input.GetKeyDown(KeyCode.F4))
+            isActive = !isActive;
+            
 	}
 
     public static void addBtn(string txt, UnityEngine.Events.UnityAction onClick) {

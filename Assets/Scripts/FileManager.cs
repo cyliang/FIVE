@@ -55,7 +55,7 @@ public class FileManager: MonoBehaviour {
 
 
     public string projectPath;
-	public GameObject camera;
+	private Camera mainCam;
 
     [Header(" [File Browser]")]
     public Canvas FileBrowserCanvas;
@@ -92,7 +92,7 @@ public class FileManager: MonoBehaviour {
 	private bool showBrowser {
 		set {
 			if (value)
-				transform.eulerAngles = new Vector3(0f, camera.transform.eulerAngles.y, 0f);
+				transform.eulerAngles = new Vector3(0f, mainCam.transform.eulerAngles.y, 0f);
 			FileBrowserCanvas.gameObject.SetActive (value);
 		}
 	}
@@ -119,6 +119,7 @@ public class FileManager: MonoBehaviour {
 		instance = this;
         projectPath = Directory.GetCurrentDirectory();
         projectPathInfo = new DirectoryInfo(projectPath);
+        mainCam = Camera.main;
 
         MenuController.addBtn("Change project path", () => {
             fileBrowserStatus = FileBrowserStatus.ProjectPath;
