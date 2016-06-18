@@ -47,8 +47,7 @@
 		}
 	}
 	*/
-	function makeQuery(queryStr) {
-		const query = JSON.parse(queryStr);
+	function makeQuery(query) {
 		return commands[query.cmd](query.params);
 	}
 	
@@ -78,6 +77,12 @@
 			};
 		}
 	};
+	
+	window.uwkQuery({
+		request: "ready",
+		onSuccess: function(response) {
+		}
+	});
 </script>
 
 </body>
