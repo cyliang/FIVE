@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
+public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
 	public SteamVR_TrackedController controller;
     public GameObject viewPrefab;
     public GameObject UIObject;
@@ -161,6 +161,24 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 			SteamVR_Controller.Input((int) controller.controllerIndex).TriggerHapticPulse(3999);
 			gripTime = -1f;
 		}
+	}
+
+	public void OnPointerDown(PointerEventData e) {
+		if (isEditing)
+			return;
+		
+		WebViewViveInput webView = e.pointerEnter.GetComponent<WebViewViveInput> ();
+		if (webView != null)
+			webView.OnPointerDown ();
+	}
+
+	public void OnPointerUp(PointerEventData e) {
+		if (isEditing)
+			return;
+		
+		WebViewViveInput webView = e.pointerEnter.GetComponent<WebViewViveInput> ();
+		if (webView != null)
+			webView.OnPointerUp ();
 	}
 
 	public void OnPointerClick(PointerEventData e) {

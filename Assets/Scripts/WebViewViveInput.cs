@@ -2,7 +2,7 @@
 using UnityEngine.EventSystems;
 using System.Collections;
 
-public class WebViewViveInput : MonoBehaviour, IPointerDownHandler, IPointerUpHandler {
+public class WebViewViveInput : MonoBehaviour {
 
     public bool ViveControllerEnabled = true;
 
@@ -34,11 +34,12 @@ public class WebViewViveInput : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         /* TODO: scroll */
     }
 
-    public void OnPointerDown(PointerEventData eventData) {
+    public void OnPointerDown() {
         UWKPlugin.UWK_MsgMouseButton(webView.ID, lastX, lastY, 0, true);
     }
 
-    public void OnPointerUp(PointerEventData eventData) {
+    public void OnPointerUp() {
         UWKPlugin.UWK_MsgMouseButton(webView.ID, lastX, lastY, 0, false);
     }
+    
 }
