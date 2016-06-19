@@ -342,7 +342,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IBeginDragHan
 
             focusView = nextFocus.First();
             focusView.selected = true;
-            UWKPlugin.UWK_FocusView(focusView.webView.ID);
+            focusView.webView.FocusView();
         }
     }
 }
