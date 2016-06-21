@@ -40,6 +40,23 @@ public class ViewBehavior : MonoBehaviour {
             webView.EvaluateJavascript(string.Format("makeQuery({0})", UWKJson.Serialize(qry.qry)), qry.callback);
         }
     }
+    
+    public void btnClicked(string type) {
+        switch (type) {
+            case "new":
+                /* TODO */
+                break;
+
+            case "open":
+                FileManager.fileBrowserCallback = fileOpened.loadFile;
+                FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
+                break;
+
+            case "save":
+                fileOpened.saveFile();
+                break;
+        }
+    }
 
     public void OnCloseBtnPressed() {
         viewController.removeView(selfNode);

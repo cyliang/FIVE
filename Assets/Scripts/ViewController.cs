@@ -67,7 +67,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
 
 		listenGrip ();
         listenEditorController();
-        MenuController.addBtn("Create View", () => {
+        MenuController.addBtn("Open File (Create View)", () => {
 			FileManager.fileBrowserCallback = createView;
 			FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
         });

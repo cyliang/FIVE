@@ -47,7 +47,7 @@ public class FileManager: MonoBehaviour {
 				if (!success)
 					Debug.LogError("Query failed.");
 				else {
-					content = (UWKJson.Deserialize(value) as IDictionary<string, string>)["content"];
+					content = (UWKJson.Deserialize(value) as IDictionary<string, object>)["content"] as string;
 				}
 			});
 		}
