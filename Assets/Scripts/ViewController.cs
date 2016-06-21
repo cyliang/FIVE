@@ -66,6 +66,7 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
         isInUI = false;
 
 		listenGrip ();
+        listenEditorController();
         MenuController.addBtn("Create View", () => {
 			FileManager.fileBrowserCallback = createView;
 			FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
@@ -82,6 +83,14 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
         } else if (Input.GetKeyDown(KeyCode.F3)) {
             if (isInUI) {
                 isEditing = !isEditing;
+            }
+        } else if (Input.GetKeyDown(KeyCode.F9)) {
+            if (focusView != null) {
+                focusView.enlargeFont(-2);
+            }
+        } else if (Input.GetKeyDown(KeyCode.F10)) {
+            if (focusView != null) {
+                focusView.enlargeFont(2);
             }
         }
 
@@ -154,6 +163,16 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
 				isInUI = !isInUI;
 		};
 	}
+
+    void listenEditorController() {
+        controller.PadClicked += (object sender, ClickedEventArgs e) => {
+            if (focusView != null && Mathf.Abs(e.padX) < 0.5f) {
+                focusView.enlargeFont(
+                    e.padY > 0f ? 2 : -2
+                );
+            }
+        };
+    }
 
 	void updateGrip() {
 		if (controller.gripped && isInUI && gripTime != -1f && Time.time - gripTime >= 0.5f) {

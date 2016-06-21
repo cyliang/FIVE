@@ -34,6 +34,7 @@
     var editor = ace.edit("editor");
     editor.setTheme("ace/theme/twilight");
     editor.session.setMode("ace/mode/javascript");
+	editor.session.setUseWrapMode(true);
 </script>
 
 <script>
@@ -76,6 +77,10 @@
 			return {
 				content: editor.getValue()
 			};
+		},
+		
+		enlargeFont: function(enlargement) {
+			editor.setFontSize(editor.getFontSize() + enlargement);
 		}
 	};
 	

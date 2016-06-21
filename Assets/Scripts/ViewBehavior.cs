@@ -45,6 +45,17 @@ public class ViewBehavior : MonoBehaviour {
         viewController.removeView(selfNode);
     }
 
+    public void enlargeFont(int enlargement) {
+        Dictionary<string, object> qry = new Dictionary<string, object>();
+        qry.Add("cmd", "enlargeFont");
+        qry.Add("params", enlargement);
+
+        makeQuery(qry, (bool success, string response) => {
+            if (!success)
+                Debug.LogError(response);
+        });
+    }
+
     public void makeQuery(IDictionary qry, JSEvalDelegate callback = null) {
         queryQueue.Enqueue(new QueryQueueData {
             qry = qry,
