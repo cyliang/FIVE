@@ -73,6 +73,17 @@ public class ViewBehavior : MonoBehaviour {
         });
     }
 
+    public void scroll(int lines) {
+        Dictionary<string, object> qry = new Dictionary<string, object>();
+        qry.Add("cmd", "navLines");
+        qry.Add("params", lines);
+
+        makeQuery(qry, (bool success, string response) => {
+            if (!success)
+                Debug.LogError(response);
+        });
+    }
+
     public void makeQuery(IDictionary qry, JSEvalDelegate callback = null) {
         queryQueue.Enqueue(new QueryQueueData {
             qry = qry,

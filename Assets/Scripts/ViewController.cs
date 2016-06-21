@@ -6,6 +6,7 @@ using System.Linq;
 
 public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IBeginDragHandler, IEndDragHandler, IDragHandler {
 	public SteamVR_TrackedController controller;
+    public ViveSpinScroll spinController;
     public GameObject viewPrefab;
     public GameObject UIObject;
     public float shiftSpeed;
@@ -92,6 +93,14 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
             if (focusView != null) {
                 focusView.enlargeFont(2);
             }
+        } else if (Input.GetKeyDown(KeyCode.F7)) {
+            if (focusView != null) {
+                focusView.scroll(-1);
+            }
+        } else if (Input.GetKeyDown(KeyCode.F8)) {
+            if (focusView != null) {
+                focusView.scroll(1);
+            }
         }
 
 		updateGrip ();
@@ -170,6 +179,12 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
                 focusView.enlargeFont(
                     e.padY > 0f ? 2 : -2
                 );
+            }
+        };
+
+        spinController.SpinScrolled += (int amount) => {
+            if (focusView != null) {
+                focusView.scroll(amount);
             }
         };
     }
