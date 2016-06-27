@@ -72,6 +72,13 @@ public class ViewController : MonoBehaviour, IPointerClickHandler, IPointerDownH
 			FileManager.fileBrowserCallback = createView;
 			FileManager.fileBrowserStatus = FileManager.FileBrowserStatus.File;
         });
+		MenuController.addBtn("Toggle View Management", () => {
+			isInUI = !isInUI;
+		});
+		MenuController.addBtn("Toggle View Editing", () => {
+			if (isInUI)
+				isEditing = !isEditing;
+		});
 	}
 	
 	// Update is called once per frame
