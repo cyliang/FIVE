@@ -96,7 +96,7 @@ public class MenuController : MonoBehaviour {
         foreach (Option option in options) {
             Image newBtn = Instantiate(instance.optionBtnPrefab).GetComponent<Image>();
             newBtn.GetComponentInChildren<Text>().text = option.text;
-			newBtn.transform.SetParent (instance.optionParent.transform, true);
+			newBtn.transform.SetParent (instance.optionParent.transform, false);
 
             newBtn.rectTransform.localPosition = new Vector3(Mathf.Cos(accuAngle), Mathf.Sin(accuAngle)) * instance.optionDistance;
             accuAngle += instance.optionRadian;
@@ -117,6 +117,7 @@ public class MenuController : MonoBehaviour {
         }
         instance.optionBtns.Clear();
         instance.optionCanvas.SetActive(false);
+		instance._menuActive = false;
         instance.optionSelected = null;
     }
 
