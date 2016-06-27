@@ -7,6 +7,7 @@ public class ViveSpinScroll : MonoBehaviour {
     public event SpinScrollEventHandler SpinScrolled;
 
     public float degreePerEvent;
+	public static bool enable = true;
 
     private SteamVR_TrackedController controller;
     private bool previousTouched;
@@ -20,7 +21,7 @@ public class ViveSpinScroll : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	    if (!controller.padTouched) {
+		if (!controller.padTouched || !enable) {
             previousTouched = false;
             return;
         }

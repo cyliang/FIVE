@@ -87,7 +87,7 @@ public class MenuController : MonoBehaviour {
 
     public static void createOptionMenu(IList<Option> options, Vector3 angle) {
         clearOptionMenu();
-        isActive = false;
+		instance._menuActive = false;
 
         instance.optionRadian = Mathf.PI * 2f / options.Count;
 		instance.optionDistance = options.Count < 5 ? 1f : (0.5f / Mathf.Tan(instance.optionRadian));
@@ -112,6 +112,7 @@ public class MenuController : MonoBehaviour {
 
         instance.transform.eulerAngles = angle;
         instance.optionCanvas.SetActive(true);
+		ViveSpinScroll.enable = false;
     }
 
     public static void clearOptionMenu() {
@@ -122,6 +123,7 @@ public class MenuController : MonoBehaviour {
         instance.optionCanvas.SetActive(false);
 		instance._menuActive = false;
         instance.optionSelected = null;
+		ViveSpinScroll.enable = true;
     }
 
     void updateOptionMenu() {
