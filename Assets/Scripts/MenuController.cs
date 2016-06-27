@@ -90,7 +90,7 @@ public class MenuController : MonoBehaviour {
 		instance._menuActive = false;
 
         instance.optionRadian = Mathf.PI * 2f / options.Count;
-		instance.optionDistance = options.Count < 5 ? 1f : (0.5f / Mathf.Tan(instance.optionRadian));
+		instance.optionDistance = options.Count < 5 ? 1f : (0.6f / Mathf.Tan(instance.optionRadian / 2));
 
         float accuAngle = 0f;
         foreach (Option option in options) {
@@ -128,7 +128,7 @@ public class MenuController : MonoBehaviour {
 
     void updateOptionMenu() {
         Vector2 haloPos = new Vector2(controller.controllerState.rAxis0.x, controller.controllerState.rAxis0.y);
-        optionHalo.rectTransform.localPosition = haloPos * optionDistance;
+		optionHalo.rectTransform.localPosition = haloPos * (optionDistance + 0.5f);
 		var newSelected = optionBtns[Mathf.FloorToInt(((Mathf.Atan2(haloPos.y, haloPos.x) + optionRadian / 2 + 2 * Mathf.PI) % (2 * Mathf.PI)) / optionRadian)];
 
 		if (optionSelected != null && newSelected != optionSelected) {
