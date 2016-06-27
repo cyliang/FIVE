@@ -12,14 +12,26 @@
     #editor {
         margin: 0;
         position: absolute;
-        top: 0;
+        top: 25px;
         bottom: 0;
         left: 0;
         right: 0;
     }
+	
+	#doc-name {
+		color: white;
+		position: absolute;
+		top: 0;
+		height: 25px;
+		padding: 0;
+		margin: 0;
+		font-size: 20px;
+	}
   </style>
 </head>
 <body>
+
+<h1 id="doc-name"></h1>
 
 <pre id="editor">function foo(items) {
     var i;
@@ -63,6 +75,7 @@
 			var modelist = ace.require("ace/ext/modelist");
 			editor.session.setMode(modelist.getModeForPath(params.path).mode);
 			editor.setValue(params.content);
+			document.getElementById("doc-name").innerHTML = params.path;
 			editor.moveCursorTo(0, 0);
 			editor.focus();
 		},
