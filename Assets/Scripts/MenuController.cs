@@ -11,21 +11,22 @@ public class MenuController : MonoBehaviour {
         public UnityEngine.Events.UnityAction onClick;
     }
 
+    private bool _menuActive;
 	public static bool isActive {
 		get {
-			return instance.canvas.activeSelf;
+			return instance._menuActive;
 		}
         set {
-            instance.canvas.SetActive(value);
-            if (value) {
-                instance.transform.eulerAngles = new Vector3(0f, instance.mainCam.transform.eulerAngles.y, 0f);
+            if (value && !instance._menuActive) {
+                clearOptionMenu();
+                createOptionMenu(instance.menuBtns, new Vector3(0f, instance.mainCam.transform.eulerAngles.y, 0f));
+            } else if (!value && instance._menuActive) {
                 clearOptionMenu();
             }
+            instance._menuActive = value;
         }
 	}
 	private Camera mainCam;
-	public GameObject canvas, panel;
-	public GameObject menuBtnPrefab;
     public GameObject optionCanvas;
     public GameObject optionBtnPrefab;
     public Image optionHalo;
@@ -33,7 +34,7 @@ public class MenuController : MonoBehaviour {
 
 	private static MenuController instance;
 
-	private Dictionary<GameObject, Button> buttons = new Dictionary<GameObject, Button>();
+	private List<Option> menuBtns = new List<Option>();
 
     private class OptionBtn {
         public Option option;
@@ -78,16 +79,10 @@ public class MenuController : MonoBehaviour {
     }
 
     public static void addBtn(string txt, UnityEngine.Events.UnityAction onClick) {
-		GameObject obj = Instantiate (instance.menuBtnPrefab);
-        Button btn = obj.GetComponentInChildren<Button>();
-        Text text = btn.GetComponentInChildren<Text>();
-
-		text.text = txt;
-		text.resizeTextForBestFit = true;
-        obj.transform.SetParent(instance.panel.transform, false);
-        btn.onClick.AddListener(onClick);
-		btn.onClick.AddListener (() => {instance.canvas.SetActive (false);});
-        instance.buttons.Add(obj, btn);
+        instance.menuBtns.Add(new Option {
+            text = txt,
+            onClick = onClick
+        });
     }
 
     public static void createOptionMenu(IList<Option> options, Vector3 angle) {
