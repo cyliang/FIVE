@@ -18,7 +18,6 @@ public class MenuController : MonoBehaviour {
 		}
         set {
             if (value && !instance._menuActive) {
-                clearOptionMenu();
                 createOptionMenu(instance.menuBtns, new Vector3(0f, instance.mainCam.transform.eulerAngles.y, 0f));
             } else if (!value && instance._menuActive) {
                 clearOptionMenu();
@@ -27,7 +26,8 @@ public class MenuController : MonoBehaviour {
         }
 	}
 	private Camera mainCam;
-    public GameObject optionCanvas;
+	public GameObject optionCanvas;
+	public GameObject optionParent;
     public GameObject optionBtnPrefab;
     public Image optionHalo;
 	public SteamVR_TrackedController controller;
@@ -90,14 +90,15 @@ public class MenuController : MonoBehaviour {
         isActive = false;
 
         instance.optionRadian = Mathf.PI * 2f / options.Count;
-        instance.optionDistance = 0.5f / Mathf.Tan(instance.optionRadian);
+		instance.optionDistance = options.Count < 5 ? 1f : (0.5f / Mathf.Tan(instance.optionRadian));
 
         float accuAngle = 0f;
         foreach (Option option in options) {
             Image newBtn = Instantiate(instance.optionBtnPrefab).GetComponent<Image>();
             newBtn.GetComponentInChildren<Text>().text = option.text;
+			newBtn.transform.SetParent (instance.optionParent.transform, true);
 
-            newBtn.rectTransform.position = new Vector3(Mathf.Cos(accuAngle), Mathf.Sin(accuAngle)) * instance.optionDistance;
+            newBtn.rectTransform.localPosition = new Vector3(Mathf.Cos(accuAngle), Mathf.Sin(accuAngle)) * instance.optionDistance;
             accuAngle += instance.optionRadian;
 
             instance.optionBtns.Add(new OptionBtn {
@@ -121,10 +122,15 @@ public class MenuController : MonoBehaviour {
 
     void updateOptionMenu() {
         Vector2 haloPos = new Vector2(controller.controllerState.rAxis0.x, controller.controllerState.rAxis0.y);
-        optionHalo.rectTransform.position = haloPos * optionDistance;
-        optionSelected = optionBtns[Mathf.FloorToInt(Mathf.Atan2(haloPos.y, haloPos.x) / optionRadian)];
+        optionHalo.rectTransform.localPosition = haloPos * optionDistance;
+		var newSelected = optionBtns[Mathf.FloorToInt(((Mathf.Atan2(haloPos.y, haloPos.x) + optionRadian / 2 + 2 * Mathf.PI) % (2 * Mathf.PI)) / optionRadian)];
 
-        optionSelected.image.color = Color.green;
+		if (optionSelected != null && newSelected != optionSelected) {
+			optionSelected.image.color = Color.white;
+		}
+
+		optionSelected = newSelected;
+		optionSelected.image.color = Color.green;
     }
 
     void onOptionClicked(object sender, ClickedEventArgs e) {
