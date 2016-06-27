@@ -3,6 +3,7 @@ using System.Collections;
 
 public class SteamVR_LaserPointer : MonoBehaviour
 {
+	public Shader laserShader;
     public Color color;
     public float thickness = 0.002f;
     public GameObject holder;
@@ -38,7 +39,7 @@ public class SteamVR_LaserPointer : MonoBehaviour
                 Object.Destroy(collider);
             }
         }
-        Material newMaterial = new Material(Shader.Find("Unlit/Color"));
+		Material newMaterial = new Material(laserShader);
         newMaterial.SetColor("_Color", color);
         pointer.GetComponent<MeshRenderer>().material = newMaterial;
 	}
