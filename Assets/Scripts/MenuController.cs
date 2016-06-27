@@ -95,6 +95,7 @@ public class MenuController : MonoBehaviour {
         float accuAngle = 0f;
         foreach (Option option in options) {
             Image newBtn = Instantiate(instance.optionBtnPrefab).GetComponent<Image>();
+			Button btn = newBtn.GetComponent<Button> ();
             newBtn.GetComponentInChildren<Text>().text = option.text;
 			newBtn.transform.SetParent (instance.optionParent.transform, false);
 
@@ -104,7 +105,9 @@ public class MenuController : MonoBehaviour {
             instance.optionBtns.Add(new OptionBtn {
                 option = option,
                 image = newBtn
-            });
+			});
+			btn.onClick.AddListener (clearOptionMenu);
+			btn.onClick.AddListener (option.onClick);
         }
 
         instance.transform.eulerAngles = angle;
